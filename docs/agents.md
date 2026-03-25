@@ -1,47 +1,79 @@
 # Agent Design and Responsibilities
 
+> See also: `docs/superpowers/specs/2026-03-24-core-architecture-design.md` for full design spec.
+
 ## Guiding Rule
 
 Agent count is not the product advantage. Controlled role boundaries are. For MVP, a small number of well-scoped workers is preferable to a large theatrical agent roster.
 
+## Architecture Decision: Producer Split
+
+The original "Producer" concept is split into two components:
+
+- **Chat Agent (LLM)** — the only user-facing component. Handles dialogue, intent classification, and lightweight creative tasks.
+- **Orchestrator (deterministic code)** — workflow state machine, packet compilation, task dispatch, canon gate. NOT an LLM.
+
+This separation ensures orchestration logic is testable, deterministic, and immune to LLM hallucination.
+
 ## Production Roles
 
-### 1. Producer (Always-On Control Layer)
+### 1. Chat Agent (LLM — mid-tier model)
 
 **Mission**
-- The only user-facing orchestrator.
+- The only user-facing conversational interface.
 
 **Responsibilities**
-- parse user intent
-- determine current workflow stage
-- identify missing information
-- route work to internal workers
-- compile context packets
-- manage artifact statuses and transitions
-- mediate conflicts
-- enforce canon gate
+- parse user intent from natural language
+- classify input into: casual/creative, canon edit, or pipeline task
+- handle lightweight creative requests directly (e.g., brainstorm names, quick suggestions)
+- generate user-facing responses with option buttons
+- route pipeline tasks to Orchestrator
 
 **Cannot**
-- directly mutate canon without explicit user confirmation
+- directly mutate canon (routes to Orchestrator)
+- dispatch workers directly (routes to Orchestrator)
 - bypass QA for chapter publication
-- invent world rules without storing them as artifacts first
 
 **Inputs**
 - user chat input
-- active project state
-- recent artifacts
-- issue queue
+- project summary (from canon store)
+- recent conversation history (rolling window)
 
 **Outputs**
 - user response
-- task dispatches
-- issue packets
-- context packets
-- artifact state changes
+- intent classification
+- structured action request to Orchestrator
 
 ---
 
-### 2. Planner (MVP combined planning role)
+### 2. Orchestrator (deterministic code, NOT LLM)
+
+**Mission**
+- Execute workflow logic, compile packets, dispatch tasks, enforce safety.
+
+**Responsibilities**
+- workflow state machine (plan → write → qa → canonize)
+- compile context packets with token budget
+- dispatch tasks to LLM workers
+- manage artifact statuses and transitions
+- enforce canon gate
+- trigger Summarizer on canonize
+- enforce safety limits (max tasks, max tokens)
+- write audit logs with token tracking
+
+**Cannot**
+- directly mutate canon without explicit user confirmation
+- create arbitrary tasks outside defined workflow
+- exceed safety limits
+
+**Hard constraints**
+- MAX_TASKS_PER_USER_ACTION = 5
+- MAX_TOKENS_PER_TASK = 50,000
+- MAX_TOTAL_TOKENS_PER_ACTION = 150,000
+
+---
+
+### 3. Planner (LLM — high-tier model)
 
 **Mission**
 - Convert vague user goals into structured narrative assets.
@@ -59,6 +91,10 @@ Agent count is not the product advantage. Controlled role boundaries are. For MV
 - finalize canon
 - write polished chapter prose for release
 - overrule confirmed canon
+- dispatch other workers
+
+**Inputs**
+- compiled packet from Orchestrator (never chat history)
 
 **Outputs**
 - evaluation report
@@ -70,10 +106,10 @@ Agent count is not the product advantage. Controlled role boundaries are. For MV
 
 ---
 
-### 3. Writer
+### 4. Writer (LLM — high-tier model)
 
 **Mission**
-- Generate chapter prose strictly from approved planning artifacts.
+- Generate chapter prose (2000-3000 Chinese characters) strictly from approved planning artifacts.
 
 **Responsibilities**
 - draft chapter prose from scene cards
@@ -85,13 +121,10 @@ Agent count is not the product advantage. Controlled role boundaries are. For MV
 - invent new world rules without marking them as unresolved/provisional
 - rewrite confirmed canon implicitly
 - skip required scenes unless instructed
+- dispatch other workers
 
 **Inputs**
-- scene card
-- current chapter objective
-- relevant canon packet
-- character state packet
-- style rules
+- compiled packet from Orchestrator (scene cards, canon, character states, style rules)
 
 **Outputs**
 - chapter draft
@@ -100,7 +133,7 @@ Agent count is not the product advantage. Controlled role boundaries are. For MV
 
 ---
 
-### 4. QA / Critic
+### 5. QA / Critic (LLM — mid-tier model)
 
 **Mission**
 - Evaluate generated output before canonization or publication.
@@ -116,6 +149,10 @@ Agent count is not the product advantage. Controlled role boundaries are. For MV
 **Cannot**
 - silently modify canon
 - rewrite content without producing a tracked suggested patch
+- dispatch other workers
+
+**Inputs**
+- compiled packet from Orchestrator (chapter draft, relevant canon, character states)
 
 **Outputs**
 - QA report
@@ -123,6 +160,32 @@ Agent count is not the product advantage. Controlled role boundaries are. For MV
 - evidence references
 - suggested patch notes
 - gate decision
+
+---
+
+### 6. Summarizer (LLM — low-tier model)
+
+**Mission**
+- Compress chapter content into structured summaries on canonize.
+
+**Responsibilities**
+- generate chapter-level summaries (300-500 chars)
+- extract character state deltas
+- identify new/resolved/advanced threads
+- extract timeline events
+- trigger volume-level summary generation at volume boundaries (~100 chapters)
+
+**Cannot**
+- modify canon directly (output is processed by Orchestrator)
+- dispatch other workers
+
+**Inputs**
+- full chapter text
+- character list
+- current thread list
+
+**Outputs**
+- structured summary with: summary text, key events, character deltas, thread changes, timeline events
 
 ---
 
@@ -147,19 +210,31 @@ Predicts drop-off risk, confusion points, and reward pacing.
 
 | Role | Can create drafts | Can review | Can confirm canon | Can archive | Can publish chapter |
 |---|---:|---:|---:|---:|---:|
-| Producer | Yes | No | No | Yes | No |
+| Chat Agent | No (routes to Orchestrator) | No | No | No | No |
+| Orchestrator | Yes (on behalf of workers) | No | No (requires user) | Yes | No |
 | Planner | Yes | No | No | No | No |
 | Writer | Yes | No | No | No | No |
 | QA | Suggested patch only | Yes | No | No | No |
+| Summarizer | Summary only | No | No | No | No |
 | User | Yes | Yes | Yes | Yes | Yes |
 
-## MVP Recommendation
+## Safety: Workers Cannot Dispatch Workers
 
-Implement only four runtime personas:
-- Producer
-- Planner
-- Writer
-- QA
+Call chain is always unidirectional:
+```
+User → Chat Agent → Orchestrator → Worker → return result → chain ends
+```
+
+Workers are stateless single-shot LLM calls. They receive only compiled packets, never chat history. They cannot call other workers or the Orchestrator.
+
+## MVP Implementation
+
+Implement five LLM workers + one code orchestrator:
+- Chat Agent (LLM)
+- Orchestrator (code)
+- Planner (LLM)
+- Writer (LLM)
+- QA (LLM)
+- Summarizer (LLM)
 
 Everything else should initially be modeled as prompts, modes, or tools rather than new runtimes.
-
