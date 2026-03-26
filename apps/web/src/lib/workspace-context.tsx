@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, type ReactNode } from 'react'
 
-export type WorkspaceView = 'chat' | 'chapter' | 'world-settings'
+export type WorkspaceView = 'chat' | 'chapter' | 'world-settings' | 'new-project'
 
 interface WorkspaceState {
   view: WorkspaceView
@@ -13,6 +13,8 @@ interface WorkspaceState {
   selectChapter: (id: string, number: number) => void
   goToChat: () => void
   setProjectId: (id: string) => void
+  refreshKey: number
+  triggerRefresh: () => void
 }
 
 const WorkspaceContext = createContext<WorkspaceState | null>(null)
@@ -22,6 +24,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null)
   const [selectedChapterNumber, setSelectedChapterNumber] = useState<number | null>(null)
   const [projectId, setProjectId] = useState<string | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const selectChapter = (id: string, number: number) => {
     setSelectedChapterId(id)
@@ -35,9 +38,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     setSelectedChapterNumber(null)
   }
 
+  const triggerRefresh = () => setRefreshKey((k) => k + 1)
+
   return (
     <WorkspaceContext.Provider
-      value={{ view, selectedChapterId, selectedChapterNumber, projectId, setView, selectChapter, goToChat, setProjectId }}
+      value={{ view, selectedChapterId, selectedChapterNumber, projectId, setView, selectChapter, goToChat, setProjectId, refreshKey, triggerRefresh }}
     >
       {children}
     </WorkspaceContext.Provider>
