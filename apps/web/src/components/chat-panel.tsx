@@ -35,6 +35,7 @@ export function ChatPanel() {
   const [isLoading, setIsLoading] = useState(false)
   const [streamingText, setStreamingText] = useState('')
   const [projectId, setProjectId] = useState<string | null>(null)
+  const [flowContext, setFlowContext] = useState<any>({ step: 'idle' })
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Get first project ID on mount
@@ -74,7 +75,7 @@ export function ChatPanel() {
       const res = await fetch(`${API_BASE}/api/projects/${projectId}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userInput, stream: true }),
+        body: JSON.stringify({ message: userInput, stream: true, flowContext }),
       })
 
       if (!res.ok) throw new Error(`API error: ${res.status}`)
@@ -130,6 +131,8 @@ export function ChatPanel() {
       } else {
         // Handle regular JSON response
         const data = await res.json()
+        // Update flow context for multi-step interactions
+        if (data.flowContext) setFlowContext(data.flowContext)
         const assistantMsg: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
