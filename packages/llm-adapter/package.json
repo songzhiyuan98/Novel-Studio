@@ -10,7 +10,10 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@novel-studio/core": "workspace:*"
+    "@ai-sdk/openai": "^3.0.48",
+    "@novel-studio/core": "workspace:*",
+    "ai": "^6.0.138",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "typescript": "^5.7.0",
