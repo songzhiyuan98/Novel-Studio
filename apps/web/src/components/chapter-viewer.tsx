@@ -32,10 +32,13 @@ export function ChapterViewer() {
       apiFetch<ChapterSummary>(`/api/projects/chapters/${selectedChapterId}/summary`)
         .catch(() => null),
     ]).then(([artifacts, sum]) => {
-      // Find the artifact for this chapter number
-      const draft = artifacts.find((a) =>
-        a.status === 'confirmed' && a.contentJson?.text
-      )
+      // Find the artifact for this specific chapter
+      // Match by title containing chapter number, or by order
+      const chNum = selectedChapterNumber
+      const confirmedDrafts = artifacts.filter((a) => a.status === 'confirmed' && a.contentJson?.text)
+      const draft = confirmedDrafts.find((a) =>
+        a.title.includes(`第${chNum}章`) || a.title.includes(`Ch.${chNum}`) || a.title.includes(`Chapter ${chNum}`)
+      ) || confirmedDrafts[chNum ? chNum - 1 : 0]
 
       if (draft?.contentJson?.text) {
         setChapterText(draft.contentJson.text)
