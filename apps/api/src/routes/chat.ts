@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { streamSSE } from 'hono/streaming'
-import { eq } from 'drizzle-orm'
+import { eq, asc } from 'drizzle-orm'
 import { generateText, streamText } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
 import type { Database } from '../db/index.js'
@@ -69,6 +69,38 @@ export function chatRoutes(db: Database) {
     return { text: r.text, tIn: r.usage?.inputTokens ?? 0, tOut: r.usage?.outputTokens ?? 0, ms: Date.now() - t0 }
   }
 
+  async function callLLMWithHistory(model: any, systemPrompt: string, history: Array<{ role: 'user' | 'assistant'; content: string }>, maxTok = 1000) {
+    const t0 = Date.now()
+    const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+      { role: 'system', content: systemPrompt },
+      ...history,
+    ]
+    const r = await generateText({ model, messages, maxTokens: maxTok, temperature: 0.7 })
+    return { text: r.text, tIn: r.usage?.inputTokens ?? 0, tOut: r.usage?.outputTokens ?? 0, ms: Date.now() - t0 }
+  }
+
+  // Load recent conversation history (last 20 messages)
+  async function getHistory(projectId: string, limit = 20) {
+    const msgs = await db.select().from(schema.conversationMessages)
+      .where(eq(schema.conversationMessages.projectId, projectId))
+      .orderBy(asc(schema.conversationMessages.createdAt))
+    // Take last N messages
+    return msgs.slice(-limit).map(m => ({
+      role: m.role as 'user' | 'assistant',
+      content: m.content,
+    })).filter(m => m.role === 'user' || m.role === 'assistant')
+  }
+
+  // Save message to conversation history
+  async function saveMessage(projectId: string, role: 'user' | 'assistant', content: string, intent?: string) {
+    await db.insert(schema.conversationMessages).values({
+      projectId,
+      role,
+      content,
+      intentClassification: intent || null,
+    })
+  }
+
   function parseJSON(text: string): any {
     const m = text.match(/```(?:json)?\s*([\s\S]*?)```/) || text.match(/(\{[\s\S]*\})/)
     if (!m) return null
@@ -122,15 +154,17 @@ export function chatRoutes(db: Database) {
     try { intent = JSON.parse(classifyR.text).type || 'casual' } catch {}
     addTrace('chat_agent', `意图: ${intent}`, { tIn: classifyR.tIn, tOut: classifyR.tOut, ms: classifyR.ms })
 
+    // ─── Save user message ───────────────────────────
+    await saveMessage(projectId, 'user', message, intent)
+
     // ─── casual ─────────────────────────────────────
     if (intent === 'casual' || intent === 'blueprint_edit') {
       const canon = await getCanon(projectId)
-      const chatR = await callLLM(
-        openai('gpt-4o-mini'),
-        `${CHAT_AGENT_SYSTEM_PROMPT}\n\n## 项目: ${project.title}\n角色: ${canon.characters.map(ch => ch.name).join(', ')}\n已写${canon.chapters.length}章\n\n用户: ${message}`,
-        1000,
-      )
-      addTrace('chat_agent', '回复', { tIn: chatR.tIn, tOut: chatR.tOut, ms: chatR.ms })
+      const history = await getHistory(projectId)
+      const systemPrompt = `${CHAT_AGENT_SYSTEM_PROMPT}\n\n## 项目: ${project.title}\n角色: ${canon.characters.map(ch => `${ch.name}(${ch.tier})`).join(', ')}\n已写${canon.chapters.length}章\n世界规则: ${canon.worldRules.map(r => r.key).join(', ')}`
+      const chatR = await callLLMWithHistory(openai('gpt-4o-mini'), systemPrompt, history, 1000)
+      addTrace('chat_agent', '回复（含对话历史）', { tIn: chatR.tIn, tOut: chatR.tOut, ms: chatR.ms })
+      await saveMessage(projectId, 'assistant', chatR.text)
       return c.json({ assistant_message: chatR.text, intent, trace: { steps: trace }, flowContext: { step: 'idle' } })
     }
 
@@ -163,6 +197,7 @@ export function chatRoutes(db: Database) {
       })
       responseText += '选择一个方向，或者告诉我你自己的想法。'
 
+      await saveMessage(projectId, 'assistant', responseText)
       return c.json({
         assistant_message: responseText,
         intent,
@@ -177,6 +212,7 @@ export function chatRoutes(db: Database) {
       const chatR = await callLLM(openai('gpt-4o-mini'),
         `${CHAT_AGENT_SYSTEM_PROMPT}\n\n用户想修改设定: "${message}"\n请确认修改内容并提醒影响。用中文。`, 500)
       addTrace('chat_agent', '确认修改意图', { tIn: chatR.tIn, tOut: chatR.tOut, ms: chatR.ms })
+      await saveMessage(projectId, 'assistant', chatR.text)
       return c.json({ assistant_message: chatR.text, intent, trace: { steps: trace }, flowContext: { step: 'idle' } })
     }
 
