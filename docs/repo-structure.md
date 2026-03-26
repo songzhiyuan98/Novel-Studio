@@ -51,6 +51,7 @@ Use a monorepo with pnpm workspace for MVP.
 ## Ownership Boundaries
 
 ### apps/web
+
 - presentation (Next.js)
 - local UI state
 - action dispatch
@@ -62,6 +63,7 @@ Use a monorepo with pnpm workspace for MVP.
 - Orchestration Trace display
 
 ### apps/api
+
 - HTTP API (Hono or Express)
 - auth (later)
 - orchestration entrypoint
@@ -69,6 +71,7 @@ Use a monorepo with pnpm workspace for MVP.
 - persistence integration (PostgreSQL + Drizzle ORM)
 
 ### packages/core
+
 - domain models and TypeScript types
 - enums and constants
 - shared Zod schemas (artifact types, status machines, output contracts)
@@ -78,6 +81,7 @@ Use a monorepo with pnpm workspace for MVP.
 - state machine definitions
 
 ### packages/orchestrator
+
 - workflow state machine (plan -> blueprint -> confirm -> write -> qa -> canonize)
 - intent routing (receives classified intent from Chat Agent)
 - packet compiler with token budget, tier-aware character inclusion, and per-worker assembly
@@ -87,6 +91,7 @@ Use a monorepo with pnpm workspace for MVP.
 - audit logging hooks with token tracking
 
 ### packages/llm-adapter
+
 - unified LLM interface (via Vercel AI SDK)
 - provider configuration (OpenAI, Anthropic, Google, DeepSeek)
 - per-worker model config resolution
@@ -94,6 +99,7 @@ Use a monorepo with pnpm workspace for MVP.
 - token counting and cost estimation
 
 ### packages/prompts
+
 - Chat Agent prompt templates
 - Planner prompt templates (expand outline mode + brainstorm mode)
 - Writer prompt templates (strict blueprint execution)
@@ -102,6 +108,7 @@ Use a monorepo with pnpm workspace for MVP.
 - output contract schemas (Zod validation)
 
 ### packages/retrieval
+
 - L0: structured canon query interfaces (exact key matching)
 - L1 (later): embedding/vector search interfaces
 - packet retrieval adapters
@@ -109,6 +116,7 @@ Use a monorepo with pnpm workspace for MVP.
 ## Why Not Multi-Repo Yet
 
 Too much early coupling exists between:
+
 - shared schemas
 - packet formats
 - API contracts

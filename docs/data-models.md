@@ -6,6 +6,7 @@
 ## Core Entities
 
 ## ProjectTemplate
+
 - id
 - project_id
 - genre_json (primary, tags)
@@ -19,6 +20,7 @@
 - updated_at
 
 ## Project
+
 - id
 - title
 - description
@@ -30,6 +32,7 @@
 Note: Genre, tone, style profile, chapter length, and volume size are all derived from the associated ProjectTemplate. No genre-specific fields are hardcoded on Project.
 
 ## ModelConfig
+
 - id
 - project_id
 - config_mode (simple, advanced)
@@ -49,6 +52,7 @@ Note: Genre, tone, style profile, chapter length, and volume size are all derive
 - updated_at
 
 ## Artifact
+
 - id
 - project_id
 - type
@@ -67,6 +71,7 @@ Note: Genre, tone, style profile, chapter length, and volume size are all derive
 - updated_at
 
 ### Artifact Types
+
 - story_bible
 - world_rule
 - character_card
@@ -80,6 +85,7 @@ Note: Genre, tone, style profile, chapter length, and volume size are all derive
 Note: `development_chain` and `issue` are separate canon/tracking entities, not artifacts.
 
 ## Chapter
+
 - id
 - project_id
 - chapter_number
@@ -94,6 +100,7 @@ Note: `development_chain` and `issue` are separate canon/tracking entities, not 
 - updated_at
 
 ## ChapterSummary
+
 - id
 - project_id
 - chapter_id
@@ -110,6 +117,7 @@ Note: `development_chain` and `issue` are separate canon/tracking entities, not 
 - created_at
 
 ## VolumeSummary
+
 - id
 - project_id
 - volume_number
@@ -124,6 +132,7 @@ Note: `development_chain` and `issue` are separate canon/tracking entities, not 
 - created_at
 
 ## StoryBibleEntry
+
 - id
 - project_id
 - entry_type
@@ -137,6 +146,7 @@ Note: `development_chain` and `issue` are separate canon/tracking entities, not 
 - created_at
 
 ## CharacterState
+
 - id
 - project_id
 - character_key
@@ -156,6 +166,7 @@ Note: `development_chain` and `issue` are separate canon/tracking entities, not 
 Note: `dimensions_json` stores genre-specific fields (e.g., realm/techniques for cultivation, net_worth/companies for billionaire). The schema is defined by `ProjectTemplate.character_dimensions` and varies per project.
 
 ## RelationshipState
+
 - id
 - project_id
 - character_a
@@ -170,6 +181,7 @@ Note: `dimensions_json` stores genre-specific fields (e.g., realm/techniques for
 Note: `base_scores_json` contains universal relationship metrics. `custom_scores_json` contains genre-specific metrics defined by `ProjectTemplate.relationship_dimensions`.
 
 ## TimelineEvent
+
 - id
 - project_id
 - chapter_number
@@ -182,6 +194,7 @@ Note: `base_scores_json` contains universal relationship metrics. `custom_scores
 - created_at
 
 ## UnresolvedThread
+
 - id
 - project_id
 - label
@@ -195,6 +208,7 @@ Note: `base_scores_json` contains universal relationship metrics. `custom_scores
 - updated_at
 
 ## DevelopmentChain
+
 - id
 - project_id
 - chain_key
@@ -207,6 +221,7 @@ Note: `base_scores_json` contains universal relationship metrics. `custom_scores
 - status
 
 ## Task
+
 - id
 - project_id
 - task_type (plan, write, qa, summarize, evaluate, rewrite_scene, impact_analysis)
@@ -227,6 +242,7 @@ Note: `base_scores_json` contains universal relationship metrics. `custom_scores
 - completed_at
 
 ## Issue
+
 - id
 - project_id
 - severity (low, medium, high)
@@ -243,6 +259,7 @@ Note: `base_scores_json` contains universal relationship metrics. `custom_scores
 Note: `issue_type` is an open string, not a closed enum. Projects may define additional issue types via `ProjectTemplate.qa_custom_dimensions`.
 
 ## ConversationMessage
+
 - id
 - project_id
 - role (user, assistant, system)
@@ -253,6 +270,7 @@ Note: `issue_type` is an open string, not a closed enum. Projects may define add
 - created_at
 
 ## AuditLog
+
 - id
 - project_id
 - event_type (task_created, task_completed, task_failed, packet_compiled, artifact_created, artifact_edited, artifact_confirmed, artifact_rejected, qa_passed, qa_blocked, chapter_canonized, canon_projected, projection_failed, summary_generated, volume_summary_generated, impact_analysis_completed, scene_rewritten)
@@ -267,18 +285,21 @@ Note: `issue_type` is an open string, not a closed enum. Projects may define add
 ## State Machines
 
 ### Artifact Status
+
 - draft -> reviewed -> confirmed -> locked
 - draft -> rejected -> archived
 - confirmed -> archived
 - Any non-locked status -> archived
 
 ### Chapter Status
+
 - planned -> drafted -> reviewed -> user_approved -> canonized -> published
 - reviewed (QA revise) -> drafted (revision loop, new user action)
 - reviewed (QA block) -> requires user decision
 - Any status -> archived
 
 ### Issue Status
+
 - open
 - needs_user_decision
 - resolved_internal

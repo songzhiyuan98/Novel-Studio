@@ -9,6 +9,7 @@ Novel Studio is a monorepo with four architecture planes. The key architectural 
 ## 1. UX Plane
 
 Components:
+
 - Chat interface (natural language + option buttons)
 - Orchestration Trace panel (debug view of agent collaboration)
 - Confirm/reject controls
@@ -17,6 +18,7 @@ Components:
 - Diff/compare modal (later priority)
 
 Responsibilities:
+
 - render state
 - collect user actions
 - present artifacts and workflow status
@@ -28,12 +30,14 @@ Responsibilities:
 The original "Producer" concept is split into two components:
 
 ### Chat Agent (LLM)
+
 - parse user intent from natural language
 - classify input: casual/creative → handle directly; canon edit → route to Orchestrator; pipeline task → route to Orchestrator
 - generate user-facing responses
 - handle lightweight creative requests without dispatching workers
 
 ### Orchestrator (deterministic code, NOT LLM)
+
 - workflow state machine (plan → write → qa → canonize)
 - packet compiler with token budget mechanism
 - task dispatcher
@@ -43,6 +47,7 @@ The original "Producer" concept is split into two components:
 - audit logging
 
 Responsibilities:
+
 - route tasks via code logic, not LLM judgment
 - assemble packets with priority-based token budget filling
 - enforce gates and transitions deterministically
@@ -50,6 +55,7 @@ Responsibilities:
 ## 3. Knowledge Plane
 
 Components:
+
 - project store
 - artifact store (all versions including draft/rejected)
 - Canon Store (confirmed-only):
@@ -63,6 +69,7 @@ Components:
   - development chain store
 
 Responsibilities:
+
 - persist structured story state
 - preserve version history
 - support L0 structured recall via exact key matching
@@ -71,6 +78,7 @@ Responsibilities:
 ## 4. Generation Plane
 
 Components:
+
 - Chat Agent runtime (LLM — mid-tier)
 - Planner runtime (LLM — high-tier)
 - Writer runtime (LLM — high-tier)
@@ -82,6 +90,7 @@ Components:
 - output contracts
 
 Responsibilities:
+
 - generate drafts and structured outputs
 - analyze outputs for quality and consistency
 - all workers are stateless single-shot calls
@@ -105,12 +114,14 @@ Responsibilities:
 ## RAG Strategy
 
 ### L0 — Structured Canon Recall (MVP)
+
 - Scene cards contain structured annotations (characters, threads, callbacks)
 - Packet Compiler queries canon store by exact key match
 - No embeddings, no vector search
 - Token budget limits how much canon is included
 
 ### L1 — Semantic Retrieval (Post-MVP)
+
 - Embedding-based search for conceptual connections
 - Only after artifact schemas are stable and chapter summaries are proven
 
@@ -123,6 +134,7 @@ Responsibilities:
 ## Model Selection
 
 User-provided API keys with two modes:
+
 - **Simple mode**: one key, system auto-selects models per worker
 - **Advanced mode**: per-worker model/provider configuration
 

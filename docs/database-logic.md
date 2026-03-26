@@ -9,6 +9,7 @@ The database is not just storage. It is the source of truth for story state tran
 ## Canon Admission Rule
 
 Only artifacts with status `confirmed` may write into canonical read models such as:
+
 - StoryBibleEntry
 - CharacterState
 - RelationshipState
@@ -21,6 +22,7 @@ Only artifacts with status `confirmed` may write into canonical read models such
 ## Write Flow by Artifact Type
 
 ### World Rule / Story Bible
+
 1. Draft artifact created by Planner (dispatched by Orchestrator).
 2. Chat Agent presents to user. User edits if needed.
 3. User confirms.
@@ -28,18 +30,21 @@ Only artifacts with status `confirmed` may write into canonical read models such
 5. Provenance links to source artifact/version.
 
 ### Character Card
+
 1. Draft created by Planner (dispatched by Orchestrator).
 2. Chat Agent presents to user. User confirms.
 3. Orchestrator triggers canon projection: updates CharacterState immutable/evolving fields.
 4. Previous values remain historically queryable by provenance.
 
 ### Scene Card
+
 1. Draft created by Planner (dispatched by Orchestrator).
 2. Chat Agent presents to user. User confirms.
 3. Scene card becomes eligible Writer input.
 4. Does not directly change canon unless explicitly promoted.
 
 ### Chapter Draft
+
 1. Writer creates chapter_draft artifact (dispatched by Orchestrator).
 2. Orchestrator automatically dispatches QA. QA creates qa_report artifact.
 3. Chat Agent presents QA results to user.
@@ -64,6 +69,7 @@ Use write model + read model projection:
 - **read model** = current canonical story state (CharacterState, StoryBible, ChapterSummary, etc.)
 
 This lets the system:
+
 - roll back projected state
 - regenerate projections if logic changes
 - explain why a canon item exists (provenance)
@@ -71,12 +77,15 @@ This lets the system:
 ## Recommended Transaction Boundaries
 
 ### Safe Single Transaction
+
 - create artifact version
 - update artifact status
 - create audit log row
 
 ### Async Projection Transaction
+
 After confirmation, Orchestrator executes:
+
 - load confirmed artifact
 - compute delta
 - if chapter: dispatch Summarizer and await result
@@ -87,6 +96,7 @@ After confirmation, Orchestrator executes:
 ## Conflict Handling
 
 When a confirmed artifact conflicts with existing canon:
+
 1. Do not silently overwrite
 2. Orchestrator creates issue record
 3. Chat Agent presents user with resolution paths:
@@ -102,6 +112,7 @@ When a confirmed artifact conflicts with existing canon:
 - historical provenance remains intact
 
 ## Audit Events to Store
+
 - task_created
 - task_completed
 - task_failed

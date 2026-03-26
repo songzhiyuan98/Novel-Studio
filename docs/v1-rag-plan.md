@@ -46,6 +46,7 @@ See design spec for detailed breakdown per worker type.
 ### Why L0 Is Sufficient for MVP
 
 At chapter 350 with three-layer summarization:
+
 - 3 volume summaries + 3 recent chapter summaries + relevant character states + active threads
 - Total: ~8000 chars ≈ ~12K tokens
 - 12K tokens of canon context covers 350 chapters of history
@@ -68,6 +69,7 @@ Add embedding-based search to find conceptual connections that exact key matchin
 ### Retrieval Readiness Criteria
 
 Do not start L1 until:
+
 - artifact schemas are stable
 - chapter summaries exist and are reliable
 - canonical read models are proven
@@ -89,16 +91,21 @@ Packet Compiler:
 ## Retrieval Use Cases by Worker
 
 ### Chat Agent
+
 Does not use retrieval directly. Receives project summary from canon store.
 
 ### Planner
+
 Find dependencies, callbacks, unresolved threads, and development chain nodes relevant to next chapter planning.
 
 ### Writer
+
 Retrieve canon and recent story state relevant to current scenes. Focus on character states, relationship states, and active threads for in-scene characters.
 
 ### QA
+
 Retrieve evidence sources for potential conflicts. Compare draft claims against confirmed canon entries.
 
 ### Summarizer
+
 Does not use retrieval. Receives full chapter text as direct input.

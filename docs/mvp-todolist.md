@@ -7,6 +7,7 @@
 User can create a project from a ProjectTemplate, manage tiered characters, confirm detailed blueprints, and write 5 sequential chapters with configurable format parameters — without continuity breakdown.
 
 ## Milestone 0 — Specs Freeze ✅
+
 - [x] finalize artifact taxonomy
 - [x] finalize state machines
 - [x] define packet schemas
@@ -26,6 +27,7 @@ User can create a project from a ProjectTemplate, manage tiered characters, conf
 ## Milestone 1 — Monorepo + Infrastructure
 
 **Tasks:**
+
 - [ ] initialize monorepo with pnpm workspace
 - [ ] add TypeScript workspace config (tsconfig base + per-package extends)
 - [ ] create apps/web (Next.js)
@@ -37,6 +39,7 @@ User can create a project from a ProjectTemplate, manage tiered characters, conf
 - [ ] add ESLint + Prettier + Vitest baseline
 
 **Acceptance Criteria:**
+
 - [ ] `pnpm install` succeeds with no errors
 - [ ] `pnpm -r build` compiles all packages
 - [ ] packages/core can be imported from apps/api (`import { ... } from '@novel-studio/core'`)
@@ -50,6 +53,7 @@ User can create a project from a ProjectTemplate, manage tiered characters, conf
 ## Milestone 2 — Data Layer + Schemas
 
 **Tasks:**
+
 - [ ] set up PostgreSQL + Drizzle ORM in apps/api
 - [ ] define schema migrations for ALL entities:
   - ProjectTemplate, Project, ModelConfig
@@ -64,6 +68,7 @@ User can create a project from a ProjectTemplate, manage tiered characters, conf
 - [ ] seed script: create example project + ProjectTemplate + 3 characters + sample world rules
 
 **Acceptance Criteria:**
+
 - [ ] `pnpm db:migrate` creates all tables without error
 - [ ] seed script creates a complete example project
 - [ ] CRUD works for: Project, ProjectTemplate, Artifact, Chapter, CharacterState, RelationshipState
@@ -73,6 +78,7 @@ User can create a project from a ProjectTemplate, manage tiered characters, conf
 - [ ] AuditLog records are created on key operations
 
 **Test Method:**
+
 ```
 unit: Repository CRUD tests (create, read, update, delete for each entity)
 unit: status machine transition tests (5 legal + 5 illegal cases)
@@ -84,6 +90,7 @@ integration: seed script → query back all data → verify correctness
 ## Milestone 3 — LLM Adapter + Streaming
 
 **Tasks:**
+
 - [ ] implement LLMAdapter unified interface (via Vercel AI SDK)
 - [ ] support OpenAI provider (GPT-4o, GPT-4o-mini)
 - [ ] implement per-worker model config resolution (read from ModelConfig table)
@@ -94,6 +101,7 @@ integration: seed script → query back all data → verify correctness
 - [ ] implement error handling (invalid key, rate limit, network timeout)
 
 **Acceptance Criteria:**
+
 - [ ] can call GPT-4o-mini with a simple prompt → receive text response
 - [ ] can call GPT-4o-mini with streaming → receive ≥5 chunks
 - [ ] token count result matches OpenAI usage field (±10%)
@@ -104,6 +112,7 @@ integration: seed script → query back all data → verify correctness
 - [ ] network timeout → retries once, then returns error
 
 **Test Method:**
+
 ```
 unit: mock provider → test token counting logic, cost calculation
 integration (requires API key):
@@ -117,6 +126,7 @@ integration (requires API key):
 ## Milestone 4 — Orchestrator Core + Packet Compiler
 
 **Tasks:**
+
 - [ ] implement workflow state machine (plan → blueprint_confirm → write → qa → canonize)
 - [ ] implement intent classification contract (Chat Agent → Orchestrator interface)
 - [ ] implement Packet Compiler:
@@ -129,6 +139,7 @@ integration (requires API key):
 - [ ] implement canon gate: only confirmed artifacts appear in packets
 
 **Acceptance Criteria:**
+
 - [ ] state machine: plan→write OK, write→plan REJECTED (unless user-triggered revise)
 - [ ] Planner packet contains: world rules, character arcs, outline, unresolved threads
 - [ ] Writer packet contains: blueprint, character states, recent summaries, style profile
@@ -139,6 +150,7 @@ integration (requires API key):
 - [ ] draft artifact NOT in packet; confirmed artifact IS in packet
 
 **Test Method:**
+
 ```
 unit: state machine transition matrix (legal/illegal transitions)
 unit: packet compiler with mock data → verify output format, token count, tier filtering
@@ -154,6 +166,7 @@ integration: create project + 5 characters (2 core, 2 important, 1 episodic)
 ## Milestone 5 — Chat Agent + All Workers
 
 **Tasks:**
+
 - [ ] Chat Agent prompt with intent classification (casual / canon_edit / pipeline_task)
 - [ ] conversation history management (rolling window 20 turns + older turns compressed)
 - [ ] lightweight creative response (casual → no worker dispatch, direct LLM reply)
@@ -166,6 +179,7 @@ integration: create project + 5 characters (2 core, 2 important, 1 episodic)
 - [ ] retry on invalid output (1 attempt)
 
 **Acceptance Criteria:**
+
 - [ ] "帮我想个名字" → classified as casual, no Orchestrator call
 - [ ] "开始写下一章" → classified as pipeline_task, routed to Orchestrator
 - [ ] "把林凡改名" → classified as canon_edit, routed to Orchestrator
@@ -180,6 +194,7 @@ integration: create project + 5 characters (2 core, 2 important, 1 episodic)
 - [ ] invalid LLM output → retries once → if still invalid, returns error
 
 **Test Method:**
+
 ```
 unit: Zod schema validation (3 valid + 3 invalid mock outputs per worker)
 unit: intent classification (10 test inputs)
@@ -195,6 +210,7 @@ integration (requires API key):
 ## Milestone 6 — Blueprint + Chapter Complete Flow
 
 **Tasks:**
+
 - [ ] Blueprint schema (per-scene: goals, beats, dialogue, combat, reversals, character entrances)
 - [ ] Blueprint generation flow: user input → Planner → blueprint artifact
 - [ ] Blueprint confirmation gate: Writer dispatch BLOCKED without confirmed blueprint
@@ -207,6 +223,7 @@ integration (requires API key):
 - [ ] revision loop: QA revise → user clicks "重写" (new user action) → re-write affected scenes
 
 **Acceptance Criteria:**
+
 - [ ] Planner generates blueprint with ≥3 scenes, each with objective and beats
 - [ ] calling Writer without confirmed blueprint → REJECTED by Orchestrator
 - [ ] confirming blueprint → Writer generates chapter → text split into scene_segments
@@ -219,6 +236,7 @@ integration (requires API key):
 - [ ] chapter status transitions correctly through the flow
 
 **Test Method:**
+
 ```
 end-to-end (requires API key):
   1. create project + template + characters
@@ -236,6 +254,7 @@ end-to-end (requires API key):
 ## Milestone 7 — Canon Projection + Summarization
 
 **Tasks:**
+
 - [ ] canon projection service: triggered on chapter confirm
 - [ ] Summarizer auto-dispatch on confirm → structured chapter summary
 - [ ] parse Summarizer output → update canon stores:
@@ -251,6 +270,7 @@ end-to-end (requires API key):
 - [ ] audit log: chapter_canonized + canon_projected events
 
 **Acceptance Criteria:**
+
 - [ ] confirm chapter → Summarizer auto-called → ChapterSummary created
 - [ ] character_delta {character: "林凡", change: "突破炼气四层"} → CharacterState updated
 - [ ] new thread created by Summarizer → UnresolvedThread record created
@@ -262,6 +282,7 @@ end-to-end (requires API key):
 - [ ] draft artifacts still NOT in packet after projection
 
 **Test Method:**
+
 ```
 integration:
   1. create project with characters (trust=50)
@@ -278,6 +299,7 @@ integration:
 ## Milestone 8 — API Layer + MVP Frontend
 
 **Tasks:**
+
 - [ ] API endpoints:
   - ProjectTemplate CRUD
   - Project CRUD (references template)
@@ -301,6 +323,7 @@ integration:
   - chapter list: click confirmed chapter → read-only view
 
 **Acceptance Criteria:**
+
 - [ ] browser: create project → select template → fill API key → success
 - [ ] browser: type message → receive streaming response
 - [ ] browser: see character panel with cards grouped by tier
@@ -313,6 +336,7 @@ integration:
 - [ ] all API endpoints return correct HTTP status codes and JSON
 
 **Test Method:**
+
 ```
 manual (requires API key):
   complete chapter 1 flow in the browser end-to-end
@@ -324,6 +348,7 @@ manual (requires API key):
 ## Milestone 9 — 5-Chapter End-to-End Validation
 
 **Tasks:**
+
 - [ ] write 5 sequential chapters using real API keys
 - [ ] verify canon consistency across all 5 chapters
 - [ ] fix bugs found during the 5-chapter run
@@ -331,6 +356,7 @@ manual (requires API key):
 - [ ] create sample project for demo
 
 **Acceptance Criteria (Final MVP):**
+
 - [ ] project created from ProjectTemplate with configurable format
 - [ ] character card tier management works (create, promote/demote, archive)
 - [ ] every chapter goes through blueprint confirmation before writing
@@ -345,6 +371,7 @@ manual (requires API key):
 - [ ] total token usage accurately recorded
 
 **Test Method:**
+
 ```
 manual end-to-end:
   write 5 chapters of a sample novel, following the full workflow each time
@@ -357,6 +384,7 @@ manual end-to-end:
 ## Milestone 10 — Impact Analysis + Polish (MVP-Optional)
 
 **Tasks:**
+
 - [ ] canon dependency graph
 - [ ] impact analysis API: POST /projects/:id/impact-analysis
 - [ ] green/yellow/red risk classification
@@ -365,6 +393,7 @@ manual end-to-end:
 - [ ] demo polish and documentation
 
 **Acceptance Criteria:**
+
 - [ ] rename character → green risk → auto-replace works
 - [ ] change character alignment → red risk → shows all affected chapters
 - [ ] user confirms resolution → changes applied → affected items marked

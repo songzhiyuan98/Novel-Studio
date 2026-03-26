@@ -8,6 +8,7 @@
 **Trigger:** User creates a new project.
 
 Input:
+
 - title
 - genre
 - tone
@@ -15,12 +16,14 @@ Input:
 - optional target length / audience / restrictions
 
 Processing:
+
 - Chat Agent acknowledges user input
 - Orchestrator creates project record and initial brief
 - Orchestrator initializes ProjectTemplate with format parameters (chapter length, volume size, style base, etc.)
 - Orchestrator creates initial open issues list
 
 Output:
+
 - project record
 - initial project brief
 - ProjectTemplate (all format parameters configurable)
@@ -35,11 +38,13 @@ Output:
 Orchestrator dispatches Planner to evaluate whether enough information exists to proceed.
 
 Possible outcomes:
+
 1. **Sufficient** → continue to Step 1.2
 2. **Insufficient but recoverable** → Orchestrator returns minimal question set to Chat Agent → Chat Agent asks user → user answers → re-evaluate
 3. **Ambiguous but not blocking** → Orchestrator marks provisional assumptions and continues
 
 Artifacts:
+
 - evaluation report
 - minimum question set (if needed)
 - provisional assumptions list (if any)
@@ -47,6 +52,7 @@ Artifacts:
 ### Step 1.2 — Foundation Artifact Generation
 
 Orchestrator dispatches Planner to create foundational artifacts:
+
 - world rules draft
 - character cards (with tier assignment: core / important / episodic)
 - relationship map
@@ -54,6 +60,7 @@ Orchestrator dispatches Planner to create foundational artifacts:
 - development chains
 
 Chat Agent presents artifacts to user. User can:
+
 - edit
 - reject
 - request alternates
@@ -74,6 +81,7 @@ Orchestrator dispatches Planner with relevant canon packet. Planner operates in 
 **Mode B — Brainstorm Directions:** When the user has no specific direction, Planner generates multiple candidate directions (A/B/C) grounded in canon, unresolved threads, and development chains. User selects a direction, then Planner expands it into a blueprint.
 
 Planner produces a **blueprint** (replaces simple scene cards):
+
 - chapter objective
 - required callbacks / dependencies
 - per-scene breakdown including:
@@ -92,6 +100,7 @@ Chat Agent presents the blueprint to user. User can edit and confirm. **Blueprin
 Orchestrator compiles context packet (via L0 structured recall with token budget) and dispatches Writer.
 
 Writer generates chapter draft (length per ProjectTemplate configuration) from:
+
 - confirmed blueprint (treated as binding contract)
 - canon packet (character states, world rules, recent summaries)
 - style packet (base + custom from ProjectTemplate)
@@ -105,6 +114,7 @@ Orchestrator saves chapter draft artifact.
 **Trigger:** Writer returns draft. Orchestrator automatically dispatches QA.
 
 QA validates:
+
 - continuity
 - pacing
 - tone alignment
@@ -114,6 +124,7 @@ QA validates:
 - **character card compliance** — character behavior must match their card traits, tier expectations, and current state
 
 Outcomes:
+
 - **Pass** → proceed to Step 4
 - **Pass with notes** → proceed to Step 4 (notes attached)
 - **Revision required** → Chat Agent presents QA issues to user. User decides whether to revise at **per-scene granularity** (new user action → back to Step 2 for affected scenes only) or accept as-is
@@ -148,6 +159,7 @@ When the user requests a change to canon elements (character traits, world rules
 **Trigger:** User confirms chapter (via confirm button).
 
 Orchestrator executes canon projection pipeline:
+
 1. Update chapter status → canonized
 2. Dispatch Summarizer → generate structured chapter summary
 3. Parse Summarizer output → update canon stores:
@@ -170,17 +182,21 @@ Return to Step 1 for next chapter.
 When the system encounters uncertainty, the following triage happens:
 
 ### Route A — Internal Resolve (Orchestrator)
+
 Orchestrator uses existing canon and planning artifacts to resolve without user interruption. Applies when the answer is deterministic from existing data.
 
 ### Route B — Ask User (Chat Agent)
+
 If ambiguity affects major plot, character logic, or world rule validity, Orchestrator sends the question to Chat Agent, which asks 1-3 highly targeted questions. Applies when user judgment is needed.
 
 ### Route C — Provisional Continue (Orchestrator)
+
 Orchestrator continues with a clear temporary assumption stored as a provisional artifact (not canon) until user confirms. Applies when the ambiguity is non-blocking.
 
 ## Revision Loop and Safety Limits
 
 Each user action (message, button click) resets the task counter. The Orchestrator enforces:
+
 - MAX_TASKS_PER_USER_ACTION = 5
 - MAX_TOKENS_PER_TASK = 50,000
 - MAX_TOTAL_TOKENS_PER_ACTION = 150,000

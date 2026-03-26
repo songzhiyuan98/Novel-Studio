@@ -9,6 +9,7 @@ Make the product feel like a controlled writers' room rather than an endless cha
 ## Main Layout
 
 ### Left: Sidebar Navigation
+
 - **Project Selector** — switch between projects
 - **Chapter List** — ordered chapter timeline within current project
   - chapter status badges (draft / in-progress / confirmed / locked)
@@ -18,9 +19,11 @@ Make the product feel like a controlled writers' room rather than an endless cha
 - Collapsible for more workspace area
 
 ### Center: Workspace Area
+
 Context-sensitive based on sidebar selection:
 
 #### Chat Feed (default)
+
 - user messages
 - Chat Agent responses
 - inline option cards (A/B/C choices)
@@ -34,6 +37,7 @@ Context-sensitive based on sidebar selection:
   - Ask Why
 
 #### Blueprint View
+
 - detailed blueprint display with per-scene sections
 - each section shows: scene goal, beats, emotional arc, continuity anchors
 - inline edit controls per section
@@ -42,6 +46,7 @@ Context-sensitive based on sidebar selection:
 - diff view when blueprint is regenerated
 
 #### Streaming Generation View
+
 - real-time token output as prose is generated
 - per-scene progress indicator
 - controls:
@@ -51,7 +56,9 @@ Context-sensitive based on sidebar selection:
 - scene boundary markers in the output stream
 
 ### Right: Artifact Panel
+
 Tabs:
+
 - Bible
 - Characters
 - Outline
@@ -60,6 +67,7 @@ Tabs:
 - Issues
 
 ### Bottom / Collapsible: Orchestration Trace Panel
+
 - expandable per-action trace view
 - shows: Chat Agent intent classification, Orchestrator decisions, worker dispatches
 - per-step: actor, action, tokens used, cost, duration
@@ -68,6 +76,7 @@ Tabs:
 ## Key Screens
 
 ### 1. Project Home
+
 - title
 - premise
 - ProjectTemplate summary (genre, format params)
@@ -80,12 +89,14 @@ Tabs:
 - character count summary (core / important / episodic)
 
 ### 2. Model Configuration
+
 - simple mode: one API key + provider selector
 - advanced mode: per-worker model/provider/key configuration
 - test connection button
 - recommended defaults display
 
 ### 3. Character Panel (Tiered Cards)
+
 - **Tab view by tier**: Core | Important | Episodic
 - Each character card shows:
   - name, portrait placeholder, role
@@ -98,6 +109,7 @@ Tabs:
 - **Add character**: manual creation or extract from confirmed content
 
 ### 4. Blueprint View
+
 - chapter number and title
 - per-scene blueprint sections:
   - scene number and title
@@ -113,6 +125,7 @@ Tabs:
 - warning if any continuity anchor references stale canon
 
 ### 5. Artifact Editor
+
 - JSON-backed but user-friendly form/text hybrid
 - version selector
 - compare against prior version (later priority)
@@ -120,6 +133,7 @@ Tabs:
 - confirm/reject controls
 
 ### 6. Chapter Draft View
+
 - chapter text with scene boundary markers
 - scene anchors with per-scene rewrite controls
 - QA side notes
@@ -127,6 +141,7 @@ Tabs:
 - confirm button gated by QA state
 
 ### 7. Impact Analysis Modal
+
 - triggered when user attempts to reverse a confirmed canon decision
 - displays:
   - the canon item being reversed
@@ -141,6 +156,7 @@ Tabs:
   - **Review individually** — step through affected items one by one
 
 ### 8. Compare Modal (later priority)
+
 - side-by-side diff between artifact versions
 - visual highlight of inserted/removed text
 - retain choice actions
@@ -160,6 +176,7 @@ Tabs:
 ## MVP UI Components (Priority Order)
 
 ### High Priority (build alongside core pipeline)
+
 - sidebar navigation (project -> chapters -> workspace)
 - chat interface with natural language input
 - blueprint view with confirm/reject controls
@@ -170,6 +187,7 @@ Tabs:
 - model configuration page
 
 ### Medium Priority
+
 - streaming generation view with pause/stop/edit
 - artifact list + detail pane
 - basic chapter view with per-scene rewrite controls
@@ -177,6 +195,7 @@ Tabs:
 - impact analysis modal
 
 ### Low Priority (later)
+
 - chapter timeline with lazy loading
 - diff / compare modal
 - relationship graph visualization

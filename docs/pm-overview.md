@@ -73,12 +73,14 @@ Novel Studio solves this by combining:
 ## Target Users
 
 ### Primary
+
 - hobbyist novel writers
 - webnovel / serialized fiction creators (especially Chinese web novel authors)
 - idea-rich but structure-poor creators
 - users who prefer decision-making over drafting prose
 
 ### Secondary
+
 - collaborative co-writers
 - plot-heavy storytellers
 - fandom / romance / progression fantasy authors

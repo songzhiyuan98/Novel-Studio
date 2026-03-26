@@ -84,10 +84,13 @@ Key architectural decision: the Orchestrator is **deterministic code**, not an L
 ## Success Criteria
 
 ### MVP (5 chapters)
+
 The system can support 5 sequential chapters in one project while preserving world rules, character consistency, and unresolved thread tracking — with blueprint confirmation before every chapter draft.
 
 ### Post-MVP (10+ chapters)
+
 The system can support 10+ sequential chapters with all of the above plus relationship continuity, volume-level summarization, and evidence-based QA.
 
 ### Long-Term Vision
+
 The system can support hundreds to thousands of chapters (Fanqie-level web novels) without quality degradation, using hierarchical summarization (chapter -> volume -> global state) and L1 semantic retrieval.

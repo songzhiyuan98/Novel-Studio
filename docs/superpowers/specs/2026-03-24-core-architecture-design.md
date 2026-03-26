@@ -91,11 +91,11 @@ This ensures orchestration logic is testable, deterministic, and not subject to 
 
 Not every user input triggers the full pipeline. Chat Agent classifies input into three types:
 
-| Type | Example | Handler |
-|------|---------|---------|
-| Casual/lightweight creative | "这名字不好听，换几个" | Chat Agent replies directly |
-| Canon modification | "把林凡改名叫陈霄" | Chat Agent → Orchestrator updates canon |
-| Pipeline task | "开始写下一章" | Full pipeline: Planner → Writer → QA |
+| Type                        | Example                | Handler                                 |
+| --------------------------- | ---------------------- | --------------------------------------- |
+| Casual/lightweight creative | "这名字不好听，换几个" | Chat Agent replies directly             |
+| Canon modification          | "把林凡改名叫陈霄"     | Chat Agent → Orchestrator updates canon |
+| Pipeline task               | "开始写下一章"         | Full pipeline: Planner → Writer → QA    |
 
 The user never needs to know about agent internals. Interaction is natural language + option buttons + confirm/reject.
 
@@ -106,6 +106,7 @@ The user never needs to know about agent internals. Interaction is natural langu
 ### Workers Are Stateless
 
 Each worker (Planner, Writer, QA, Summarizer) is a **stateless single-shot LLM call**. Workers:
+
 - Receive only a compiled packet (no chat history, no conversation context)
 - Return structured output conforming to a defined contract
 - Cannot call other workers
@@ -114,13 +115,13 @@ Each worker (Planner, Writer, QA, Summarizer) is a **stateless single-shot LLM c
 
 ### Worker Roster
 
-| Worker | Mission | Typical Model Tier |
-|--------|---------|-------------------|
-| Chat Agent | User intent parsing + dialogue | Mid-tier (Sonnet/GPT-4o-mini) |
-| Planner | Structure planning, scene cards, outlines | High-tier (Opus/GPT-4o) |
-| Writer | Chapter prose generation (2000-3000 chars) | High-tier (Opus/GPT-4o/DeepSeek) |
-| QA | Continuity/style/pacing validation | Mid-tier (Sonnet/GPT-4o-mini) |
-| Summarizer | Chapter compression on canonize | Low-tier (Haiku/GPT-4o-mini) |
+| Worker     | Mission                                    | Typical Model Tier               |
+| ---------- | ------------------------------------------ | -------------------------------- |
+| Chat Agent | User intent parsing + dialogue             | Mid-tier (Sonnet/GPT-4o-mini)    |
+| Planner    | Structure planning, scene cards, outlines  | High-tier (Opus/GPT-4o)          |
+| Writer     | Chapter prose generation (2000-3000 chars) | High-tier (Opus/GPT-4o/DeepSeek) |
+| QA         | Continuity/style/pacing validation         | Mid-tier (Sonnet/GPT-4o-mini)    |
+| Summarizer | Chapter compression on canonize            | Low-tier (Haiku/GPT-4o-mini)     |
 
 ### Model Selection: User-Controlled
 
@@ -131,6 +132,7 @@ Users provide their own API keys and choose models. Two configuration modes:
 **Advanced mode:** Per-worker model configuration, potentially different providers.
 
 Supported providers (via Vercel AI SDK unified interface):
+
 - OpenAI (GPT-4o, GPT-4o-mini)
 - Anthropic (Claude Opus, Sonnet, Haiku)
 - Google (Gemini)
@@ -139,11 +141,11 @@ Supported providers (via Vercel AI SDK unified interface):
 
 ```typescript
 interface WorkerModelConfig {
-  chat:       { provider: string; model: string };
-  planner:    { provider: string; model: string };
-  writer:     { provider: string; model: string };
-  qa:         { provider: string; model: string };
-  summarizer: { provider: string; model: string };
+  chat: { provider: string; model: string }
+  planner: { provider: string; model: string }
+  writer: { provider: string; model: string }
+  qa: { provider: string; model: string }
+  summarizer: { provider: string; model: string }
 }
 ```
 
@@ -184,6 +186,7 @@ Store confirmed canon as structured JSON. Query by exact ID/key match driven by 
 ### L1 — Semantic Retrieval (Post-MVP)
 
 Add embedding-based search only after:
+
 - Artifact schemas are stable
 - Chapter summaries exist and are reliable
 - Canon read models are proven
@@ -232,12 +235,12 @@ P4 — Supplementary (fill if space remains)
 
 ### Per-Worker Packet Differences
 
-| Worker | Core needs | Does not need |
-|--------|-----------|---------------|
-| Planner | Full outline, unresolved threads, development chains, character arcs | Previous chapter raw text, style details |
-| Writer | Scene cards, character states, recent chapter summaries, style constraints | Full outline, resolved threads |
-| QA | Current chapter draft, relevant canon entries, character state snapshots | Style constraints, outline |
-| Summarizer | Current chapter full text, character list | Outline, world rules |
+| Worker     | Core needs                                                                 | Does not need                            |
+| ---------- | -------------------------------------------------------------------------- | ---------------------------------------- |
+| Planner    | Full outline, unresolved threads, development chains, character arcs       | Previous chapter raw text, style details |
+| Writer     | Scene cards, character states, recent chapter summaries, style constraints | Full outline, resolved threads           |
+| QA         | Current chapter draft, relevant canon entries, character state snapshots   | Style constraints, outline               |
+| Summarizer | Current chapter full text, character list                                  | Outline, world rules                     |
 
 ---
 
@@ -246,12 +249,14 @@ P4 — Supplementary (fill if space remains)
 ### Three-Layer Structure
 
 **Layer 0 — Chapter Summary (generated on each canonize)**
+
 - ~300-500 Chinese characters
 - Preserves: key events, character state changes, new hooks, new world facts
 - Discards: transition prose, environment descriptions, combat details
 - Lifecycle: permanent
 
 **Layer 1 — Volume Summary (generated every ~100 chapters)**
+
 - ~1000-2000 Chinese characters
 - Compressed from 100 chapter summaries
 - Preserves: main plot progression, character arc turning points, world changes, major hooks
@@ -259,6 +264,7 @@ P4 — Supplementary (fill if space remains)
 - Lifecycle: permanent
 
 **Layer 2 — Global State (continuously updated real-time view)**
+
 - Not a summary — structured state tables
 - CharacterState, WorldRules, ActiveThreads, RelationshipMap
 - Incrementally updated on each canonize
@@ -271,16 +277,12 @@ P4 — Supplementary (fill if space remains)
   "chapter_number": 350,
   "summary": "string (300-500 chars)",
   "key_events": ["string"],
-  "character_deltas": [
-    { "character": "string", "change": "string" }
-  ],
+  "character_deltas": [{ "character": "string", "change": "string" }],
   "new_threads": ["thread_id"],
   "resolved_threads": ["thread_id"],
   "advanced_threads": ["thread_id"],
   "new_world_facts": ["string"],
-  "timeline_events": [
-    { "event": "string", "location": "string" }
-  ]
+  "timeline_events": [{ "event": "string", "location": "string" }]
 }
 ```
 
@@ -346,23 +348,24 @@ Each state can only transition to defined next states. No freeform task creation
 ```typescript
 switch (intent) {
   case 'start_chapter':
-    await runPipeline(['planner', 'writer', 'qa']);
-    break;
+    await runPipeline(['planner', 'writer', 'qa'])
+    break
   case 'edit_artifact':
-    await updateArtifact(payload);
-    break;
+    await updateArtifact(payload)
+    break
   case 'confirm':
-    await canonize(artifactId);
-    break;
+    await canonize(artifactId)
+    break
   default:
     // Chat Agent handles directly, no task dispatch
-    break;
+    break
 }
 ```
 
 ### Protection Layer 3: Workers Cannot Dispatch Workers
 
 Architectural hard constraint:
+
 - Workers can only return structured output
 - Workers cannot call other workers
 - Workers cannot call the Orchestrator
@@ -370,6 +373,7 @@ Architectural hard constraint:
 - Only user actions can trigger the Orchestrator
 
 Call chain is always unidirectional:
+
 ```
 User → Chat Agent → Orchestrator → Worker → return result → chain ends
 ```
@@ -383,6 +387,7 @@ User → Chat Agent → Orchestrator → Worker → return result → chain ends
 ### Token Monitoring
 
 Every task records:
+
 ```json
 {
   "task_id": "string",
@@ -462,13 +467,13 @@ Phase 2-N: Chapter Loop (repeats)
 
 UI priority is adjusted: not "UI last" but "minimal UI alongside core pipeline for debugging."
 
-| Priority | Component | Purpose |
-|----------|-----------|---------|
-| High | Chat interface | Test user interaction flow |
-| High | Orchestration Trace panel | Debug and optimize agent collaboration |
-| High | Confirm / Reject buttons | Core canon gate interaction |
-| Medium | Artifact view/edit | Inspect generated scene cards, character cards |
-| Low | Chapter timeline, diff compare | Later optimization |
+| Priority | Component                      | Purpose                                        |
+| -------- | ------------------------------ | ---------------------------------------------- |
+| High     | Chat interface                 | Test user interaction flow                     |
+| High     | Orchestration Trace panel      | Debug and optimize agent collaboration         |
+| High     | Confirm / Reject buttons       | Core canon gate interaction                    |
+| Medium   | Artifact view/edit             | Inspect generated scene cards, character cards |
+| Low      | Chapter timeline, diff compare | Later optimization                             |
 
 The MVP UI is essentially: **a chat window with backend trace + a few buttons.**
 
@@ -476,34 +481,34 @@ The MVP UI is essentially: **a chat window with backend trace + a few buttons.**
 
 ## 10. Recommended Tech Stack
 
-| Layer | Choice | Reasoning |
-|-------|--------|-----------|
-| Runtime | Node.js + TypeScript | Good ecosystem, full AI SDK support |
-| LLM calls | Vercel AI SDK | Unified interface, zero-cost multi-provider switching later |
-| Database | PostgreSQL + Drizzle ORM | Structured data primary, lots of relational queries |
-| API | Hono or Express | Lightweight, sufficient |
-| Monorepo | pnpm workspace | Simple and reliable |
-| Frontend (last) | Next.js | Natural integration with Vercel AI SDK |
+| Layer           | Choice                   | Reasoning                                                   |
+| --------------- | ------------------------ | ----------------------------------------------------------- |
+| Runtime         | Node.js + TypeScript     | Good ecosystem, full AI SDK support                         |
+| LLM calls       | Vercel AI SDK            | Unified interface, zero-cost multi-provider switching later |
+| Database        | PostgreSQL + Drizzle ORM | Structured data primary, lots of relational queries         |
+| API             | Hono or Express          | Lightweight, sufficient                                     |
+| Monorepo        | pnpm workspace           | Simple and reliable                                         |
+| Frontend (last) | Next.js                  | Natural integration with Vercel AI SDK                      |
 
 ---
 
 ## 11. Decision Log
 
-| # | Decision | Conclusion |
-|---|----------|------------|
-| 1 | Core selling point | AI writes Fanqie-level long-form (100s-1000s chapters) without degradation |
-| 2 | Development order | Core pipeline → UI → RAG optimization |
-| 3 | Agent architecture | Chat Agent (LLM) + Orchestrator (code) + Workers (LLM) |
-| 4 | RAG strategy | L0 structured recall (MVP) → L1 semantic retrieval (later) |
-| 5 | Compression strategy | Canonize-time compression, three-layer summaries (chapter → volume → global state) |
-| 6 | Packet Compiler | Token budget + priority fill + scene-card-driven exact queries |
-| 7 | Model selection | User-provided API keys, simple/advanced config modes |
-| 8 | Chapter spec | 2000-3000 chars/chapter, ~100 chapters/volume |
-| 9 | MVP scope | 5-chapter complete loop, CLI/API first, cut UI and semantic RAG |
-| 10 | Tech stack | TypeScript + Vercel AI SDK + PostgreSQL + pnpm monorepo |
-| 11 | Interaction model | Natural language + option buttons, user unaware of agent internals |
-| 12 | Chat Agent scope | Lightweight creative → direct reply; canon edit → Orchestrator; pipeline → workers |
-| 13 | MVP UI scope | Chat + Orchestration Trace + Confirm/Reject buttons |
-| 14 | Context isolation | Workers stateless single-shot, packet-only, no chat history |
-| 15 | Token monitoring | Per-task input/output tokens + cost + duration recorded and displayed |
-| 16 | Anti-infinite-loop | Hard limits + deterministic orchestration + workers cannot dispatch workers |
+| #   | Decision             | Conclusion                                                                         |
+| --- | -------------------- | ---------------------------------------------------------------------------------- |
+| 1   | Core selling point   | AI writes Fanqie-level long-form (100s-1000s chapters) without degradation         |
+| 2   | Development order    | Core pipeline → UI → RAG optimization                                              |
+| 3   | Agent architecture   | Chat Agent (LLM) + Orchestrator (code) + Workers (LLM)                             |
+| 4   | RAG strategy         | L0 structured recall (MVP) → L1 semantic retrieval (later)                         |
+| 5   | Compression strategy | Canonize-time compression, three-layer summaries (chapter → volume → global state) |
+| 6   | Packet Compiler      | Token budget + priority fill + scene-card-driven exact queries                     |
+| 7   | Model selection      | User-provided API keys, simple/advanced config modes                               |
+| 8   | Chapter spec         | 2000-3000 chars/chapter, ~100 chapters/volume                                      |
+| 9   | MVP scope            | 5-chapter complete loop, CLI/API first, cut UI and semantic RAG                    |
+| 10  | Tech stack           | TypeScript + Vercel AI SDK + PostgreSQL + pnpm monorepo                            |
+| 11  | Interaction model    | Natural language + option buttons, user unaware of agent internals                 |
+| 12  | Chat Agent scope     | Lightweight creative → direct reply; canon edit → Orchestrator; pipeline → workers |
+| 13  | MVP UI scope         | Chat + Orchestration Trace + Confirm/Reject buttons                                |
+| 14  | Context isolation    | Workers stateless single-shot, packet-only, no chat history                        |
+| 15  | Token monitoring     | Per-task input/output tokens + cost + duration recorded and displayed              |
+| 16  | Anti-infinite-loop   | Hard limits + deterministic orchestration + workers cannot dispatch workers        |

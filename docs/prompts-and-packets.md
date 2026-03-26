@@ -13,6 +13,7 @@ Packets must be compact, structured, and task-specific. They are the main defens
 Each worker receives a different packet tailored to its task. The Packet Compiler fills sections by priority within the token budget.
 
 ### Planner Packet
+
 - task_objective
 - workflow_stage
 - planning_mode (expand_outline | brainstorm_directions)
@@ -26,6 +27,7 @@ Each worker receives a different packet tailored to its task. The Packet Compile
 - output_contract
 
 ### Writer Packet
+
 - chapter_objective
 - **blueprint** (confirmed — treated as binding contract; replaces simple scene cards)
   - per-scene objectives and emotional beats
@@ -41,6 +43,7 @@ Each worker receives a different packet tailored to its task. The Packet Compile
 - output_contract
 
 ### QA Packet
+
 - chapter_draft (full text)
 - **blueprint** (for coverage verification — every scene objective, dialogue beat, combat detail, and reversal must be checked against the draft)
 - relevant_canon (character states with card data, world rules)
@@ -52,6 +55,7 @@ Each worker receives a different packet tailored to its task. The Packet Compile
 - output_contract
 
 ### Summarizer Packet
+
 - chapter_text (full)
 - chapter_number
 - character_list (with tiers)
@@ -93,6 +97,7 @@ Style profile configuration is managed through ProjectTemplate. The profile cons
 Stored as structured data on the ProjectTemplate entity, not vague text.
 
 Available fields (all configurable per project via ProjectTemplate):
+
 - pov (first, third_limited, third_omniscient)
 - tense (past, present)
 - prose_density (light, medium, dense)

@@ -78,6 +78,7 @@ Novel-Studio/
 ### Task 1: Install pnpm and initialize root workspace
 
 **Files:**
+
 - Create: `package.json`
 - Create: `pnpm-workspace.yaml`
 - Update: `.gitignore`
@@ -115,8 +116,8 @@ Verify: `pnpm -v` outputs a version number.
 
 ```yaml
 packages:
-  - "apps/*"
-  - "packages/*"
+  - 'apps/*'
+  - 'packages/*'
 ```
 
 - [ ] **Step 4: Create .npmrc**
@@ -158,6 +159,7 @@ git commit -m "chore: initialize pnpm monorepo workspace"
 ### Task 2: Create shared TypeScript config
 
 **Files:**
+
 - Create: `tsconfig.base.json`
 
 - [ ] **Step 1: Create tsconfig.base.json**
@@ -195,6 +197,7 @@ git commit -m "chore: add shared TypeScript base config"
 ### Task 3: Create packages/core
 
 **Files:**
+
 - Create: `packages/core/package.json`
 - Create: `packages/core/tsconfig.json`
 - Create: `packages/core/src/index.ts`
@@ -273,6 +276,7 @@ git commit -m "chore: add packages/core skeleton"
 ### Task 4: Create packages/orchestrator
 
 **Files:**
+
 - Create: `packages/orchestrator/package.json`
 - Create: `packages/orchestrator/tsconfig.json`
 - Create: `packages/orchestrator/src/index.ts`
@@ -361,6 +365,7 @@ git commit -m "chore: add packages/orchestrator skeleton with core dependency"
 ### Task 5: Create packages/prompts
 
 **Files:**
+
 - Create: `packages/prompts/package.json`
 - Create: `packages/prompts/tsconfig.json`
 - Create: `packages/prompts/src/index.ts`
@@ -393,6 +398,7 @@ git commit -m "chore: add packages/orchestrator skeleton with core dependency"
 - [ ] **Step 2: Create tsconfig.json, src/index.ts, test** (same pattern as core)
 
 tsconfig.json:
+
 ```json
 {
   "extends": "../../tsconfig.base.json",
@@ -405,11 +411,13 @@ tsconfig.json:
 ```
 
 src/index.ts:
+
 ```typescript
 export const PACKAGE_NAME = '@novel-studio/prompts' as const
 ```
 
-__tests__/placeholder.test.ts:
+**tests**/placeholder.test.ts:
+
 ```typescript
 import { describe, it, expect } from 'vitest'
 import { PACKAGE_NAME } from '../src/index.js'
@@ -441,6 +449,7 @@ git commit -m "chore: add packages/prompts skeleton"
 ### Task 6: Create packages/llm-adapter
 
 **Files:**
+
 - Create: `packages/llm-adapter/package.json`
 - Create: `packages/llm-adapter/tsconfig.json`
 - Create: `packages/llm-adapter/src/index.ts`
@@ -473,6 +482,7 @@ git commit -m "chore: add packages/prompts skeleton"
 - [ ] **Step 2: Create tsconfig.json, src/index.ts, test** (same pattern)
 
 tsconfig.json:
+
 ```json
 {
   "extends": "../../tsconfig.base.json",
@@ -485,11 +495,13 @@ tsconfig.json:
 ```
 
 src/index.ts:
+
 ```typescript
 export const PACKAGE_NAME = '@novel-studio/llm-adapter' as const
 ```
 
-__tests__/placeholder.test.ts:
+**tests**/placeholder.test.ts:
+
 ```typescript
 import { describe, it, expect } from 'vitest'
 import { PACKAGE_NAME } from '../src/index.js'
@@ -521,6 +533,7 @@ git commit -m "chore: add packages/llm-adapter skeleton"
 ### Task 7: Create apps/api (Hono)
 
 **Files:**
+
 - Create: `apps/api/package.json`
 - Create: `apps/api/tsconfig.json`
 - Create: `apps/api/src/index.ts`
@@ -638,6 +651,7 @@ git commit -m "chore: add apps/api skeleton with Hono + workspace imports"
 ### Task 8: Create apps/web (Next.js)
 
 **Files:**
+
 - Create: `apps/web/package.json`
 - Create: `apps/web/tsconfig.json`
 - Create: `apps/web/next.config.ts`
@@ -772,6 +786,7 @@ git commit -m "chore: add apps/web skeleton with Next.js + core import"
 ### Task 9: Add ESLint + Prettier
 
 **Files:**
+
 - Create: `eslint.config.js`
 - Create: `.prettierrc`
 - Modify: `package.json` (root — add dev deps)
@@ -800,7 +815,7 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
-  }
+  },
 )
 ```
 
