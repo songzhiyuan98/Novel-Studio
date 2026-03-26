@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: novel-studio-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: novel_studio
+      POSTGRES_PASSWORD: novel_studio_dev
+      POSTGRES_DB: novel_studio
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
