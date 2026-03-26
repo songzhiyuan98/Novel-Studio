@@ -1,23 +1,28 @@
 'use client'
 
 import { useState } from 'react'
+import { apiPost } from '@/lib/api'
 
 interface Message {
   id: string
   role: 'user' | 'assistant'
   content: string
+  trace?: Array<{ actor: string; action: string; tokens?: number; cost?: string }>
 }
 
-const initialMessages: Message[] = [
-  { id: '1', role: 'assistant', content: '欢迎来到 Novel Studio！我是你的创作助手。你可以：\n\n- 告诉我你的故事想法\n- 让我帮你规划下一章\n- 修改角色设定\n- 或者直接聊聊创作灵感\n\n有什么想法？' },
-]
-
 export function ChatPanel() {
-  const [messages, setMessages] = useState<Message[]>(initialMessages)
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '1',
+      role: 'assistant',
+      content:
+        '欢迎来到 Novel Studio！我是你的创作助手。\n\n你可以：\n- 告诉我你的故事想法\n- 让我帮你规划下一章\n- 修改角色设定\n- 或者直接聊聊创作灵感\n\n有什么想法？',
+    },
+  ])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim() || isLoading) return
 
     const userMessage: Message = {
@@ -27,19 +32,41 @@ export function ChatPanel() {
     }
 
     setMessages((prev) => [...prev, userMessage])
+    const userInput = input.trim()
     setInput('')
     setIsLoading(true)
 
-    // Simulate response (will be replaced with real API call)
-    setTimeout(() => {
+    try {
+      // Try to call real API
+      const response = await apiPost<{
+        assistant_message: string
+        intent: string
+        trace?: { steps: Array<{ actor: string; action: string; tokens?: { input: number; output: number }; cost_usd?: number }> }
+      }>('/api/projects/chat', { message: userInput })
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: '收到！这个功能正在开发中，很快就能真正对话了。',
+        content: response.assistant_message || '收到你的消息！',
+        trace: response.trace?.steps.map((s) => ({
+          actor: s.actor,
+          action: s.action,
+          tokens: s.tokens ? s.tokens.input + s.tokens.output : undefined,
+          cost: s.cost_usd ? `$${s.cost_usd.toFixed(4)}` : undefined,
+        })),
       }
       setMessages((prev) => [...prev, assistantMessage])
-      setIsLoading(false)
-    }, 1000)
+    } catch {
+      // Fallback when API chat endpoint is not yet implemented
+      const fallback: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: `收到！你说的是："${userInput}"\n\n聊天 API 还在开发中，目前你可以通过侧边栏查看已有的章节和角色数据。`,
+      }
+      setMessages((prev) => [...prev, fallback])
+    }
+
+    setIsLoading(false)
   }
 
   return (
@@ -47,25 +74,36 @@ export function ChatPanel() {
       {/* Header */}
       <div className="border-b border-zinc-200 bg-white px-4 py-3">
         <h2 className="text-sm font-semibold">创作对话</h2>
-        <p className="text-xs text-zinc-500">第3章 · 药园风波</p>
+        <p className="text-xs text-zinc-500">与 AI 助手协作写作</p>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 space-y-4 overflow-y-auto p-4">
         {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`max-w-[80%] rounded-lg px-4 py-2 text-sm whitespace-pre-wrap ${
-                msg.role === 'user'
-                  ? 'bg-zinc-900 text-white'
-                  : 'bg-white border border-zinc-200 text-zinc-800'
-              }`}
-            >
-              {msg.content}
+          <div key={msg.id}>
+            <div className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div
+                className={`max-w-[80%] whitespace-pre-wrap rounded-lg px-4 py-2 text-sm ${
+                  msg.role === 'user'
+                    ? 'bg-zinc-900 text-white'
+                    : 'border border-zinc-200 bg-white text-zinc-800'
+                }`}
+              >
+                {msg.content}
+              </div>
             </div>
+            {/* Trace info */}
+            {msg.trace && msg.trace.length > 0 && (
+              <div className="mt-1 ml-2 space-y-0.5">
+                {msg.trace.map((t, i) => (
+                  <div key={i} className="text-xs text-zinc-400">
+                    <span className="font-medium">{t.actor}</span>: {t.action}
+                    {t.tokens && <span className="ml-1">({t.tokens} tok)</span>}
+                    {t.cost && <span className="ml-1">{t.cost}</span>}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ))}
         {isLoading && (
