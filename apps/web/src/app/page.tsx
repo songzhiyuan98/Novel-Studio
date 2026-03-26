@@ -1,11 +1,10 @@
-import { PACKAGE_NAME } from '@novel-studio/core'
-
 export default function Home() {
   return (
-    <main>
-      <h1>Novel Studio</h1>
-      <p>AI-powered serial fiction workbench</p>
-      <p>Core: {PACKAGE_NAME}</p>
+    <main className="flex min-h-screen items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-gray-900">Novel Studio</h1>
+        <p className="mt-2 text-lg text-gray-600">AI-powered serial fiction workbench</p>
+      </div>
     </main>
   )
 }
