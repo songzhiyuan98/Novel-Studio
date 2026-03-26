@@ -30,3 +30,7 @@ export { BlueprintGate, BlueprintNotFoundError, BlueprintNotConfirmedError, Blue
 export type { Blueprint, BlueprintScene } from './pipeline/blueprint-gate.js'
 export { mergeRewrittenScene, assembleSurroundingContext, combineScenesToChapter } from './pipeline/scene-rewriter.js'
 export type { SceneSegment, RewriteRequest } from './pipeline/scene-rewriter.js'
+
+// Canon projection
+export { CanonProjector } from './canon/projector.js'
+export type { SummarizerResult, CanonUpdate, CanonRepositories } from './canon/types.js'
