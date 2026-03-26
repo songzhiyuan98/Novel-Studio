@@ -62,7 +62,21 @@ async function callLLM(model: any, modelName: string, prompt: string, label: str
 function parseJSON<T>(text: string, label: string): T {
   const m = text.match(/```(?:json)?\s*([\s\S]*?)```/) || text.match(/(\{[\s\S]*\})/)
   if (!m) throw new Error(`[${label}] No JSON found`)
-  return JSON.parse(m[1].trim())
+  // Clean control characters that break JSON.parse (common with DeepSeek)
+  const cleaned = m[1].trim()
+    .replace(/[\x00-\x1f\x7f]/g, (ch) => {
+      if (ch === '\n' || ch === '\r' || ch === '\t') return ch
+      return ''
+    })
+    // Fix unescaped newlines inside JSON string values
+    .replace(/(?<=": "(?:[^"\\]|\\.)*)(?:\r?\n)(?=(?:[^"\\]|\\.)*")/g, '\\n')
+  try {
+    return JSON.parse(cleaned)
+  } catch (e) {
+    // Fallback: more aggressive cleaning
+    const aggressive = m[1].trim().replace(/[\x00-\x1f\x7f]/g, ' ')
+    return JSON.parse(aggressive)
+  }
 }
 
 const OUTLINES = [
@@ -258,7 +272,7 @@ async function main() {
   const thrds = await db.select().from(schema.unresolvedThreads).where(eq(schema.unresolvedThreads.projectId, p.id))
   const tl = await db.select().from(schema.timelineEvents).where(eq(schema.timelineEvents.projectId, p.id))
   console.log(`\n  Canon: ${sums.length}摘要 | ${thrds.length}线索 | ${tl.length}事件`)
-  if (thrds.length > 0) console.log(`  线索: ${thrds.map(t=>t.label).join(', ')}`)
+  if (thrds.length > 0) console.log(`  线索: ${thrds.map(t => typeof t.label === 'string' ? t.label : JSON.stringify(t.label)).join(', ')}`)
 
   await client.end()
 }
