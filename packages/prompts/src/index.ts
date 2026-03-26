@@ -9,7 +9,7 @@ export { plannerOutputSchema, plannerArtifactSchema, plannerIssueSchema } from '
 export type { PlannerOutput } from './planner/schema.js'
 
 // Writer
-export { WRITER_SYSTEM_PROMPT, buildWriterPacketPrompt } from './writer/prompt.js'
+export { WRITER_SYSTEM_PROMPT, WRITER_PROSE_SYSTEM_PROMPT, WRITER_METADATA_SYSTEM_PROMPT, buildWriterPacketPrompt, buildWriterProsePrompt, buildWriterMetadataPrompt } from './writer/prompt.js'
 export { writerOutputSchema, sceneSegmentSchema } from './writer/schema.js'
 export type { WriterOutput } from './writer/schema.js'
 
