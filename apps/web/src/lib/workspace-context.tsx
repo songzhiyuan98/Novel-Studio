@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, type ReactNode } from 'react'
 
-export type WorkspaceView = 'chat' | 'chapter'
+export type WorkspaceView = 'chat' | 'chapter' | 'world-settings'
 
 interface WorkspaceState {
   view: WorkspaceView

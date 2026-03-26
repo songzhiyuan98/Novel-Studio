@@ -23,7 +23,7 @@ const statusLabels: Record<string, string> = {
 }
 
 export function Sidebar() {
-  const { selectChapter, goToChat, selectedChapterNumber, view, setProjectId } = useWorkspace()
+  const { selectChapter, goToChat, selectedChapterNumber, view, setView, setProjectId } = useWorkspace()
   const [projects, setProjects] = useState<Project[]>([])
   const [chapters, setChapters] = useState<Chapter[]>([])
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
@@ -84,7 +84,10 @@ export function Sidebar() {
           <button className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-zinc-100">
             👤 角色面板
           </button>
-          <button className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-zinc-100">
+          <button
+            onClick={() => { setView('world-settings') }}
+            className={`w-full rounded-md px-3 py-2 text-left text-sm ${view === 'world-settings' ? 'bg-zinc-100 font-medium' : 'hover:bg-zinc-100'}`}
+          >
             🌍 世界设定
           </button>
         </div>
