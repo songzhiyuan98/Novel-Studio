@@ -10,16 +10,17 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@hono/node-server": "^1.14.0",
     "@novel-studio/core": "workspace:*",
-    "@novel-studio/orchestrator": "workspace:*",
     "@novel-studio/llm-adapter": "workspace:*",
+    "@novel-studio/orchestrator": "workspace:*",
     "@novel-studio/prompts": "workspace:*",
-    "hono": "^4.7.0",
-    "@hono/node-server": "^1.14.0"
+    "hono": "^4.7.0"
   },
   "devDependencies": {
-    "typescript": "^5.7.0",
+    "@types/node": "^25.5.0",
     "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   }
 }
