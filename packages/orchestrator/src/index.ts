@@ -22,3 +22,11 @@ export type {
   SafetyLimits,
 } from './types.js'
 export { DEFAULT_SAFETY_LIMITS } from './types.js'
+
+// Pipeline
+export { ChapterPipeline } from './pipeline/chapter-pipeline.js'
+export type { PipelineCallbacks, PipelineEvent } from './pipeline/chapter-pipeline.js'
+export { BlueprintGate, BlueprintNotFoundError, BlueprintNotConfirmedError, BlueprintEmptyError } from './pipeline/blueprint-gate.js'
+export type { Blueprint, BlueprintScene } from './pipeline/blueprint-gate.js'
+export { mergeRewrittenScene, assembleSurroundingContext, combineScenesToChapter } from './pipeline/scene-rewriter.js'
+export type { SceneSegment, RewriteRequest } from './pipeline/scene-rewriter.js'
