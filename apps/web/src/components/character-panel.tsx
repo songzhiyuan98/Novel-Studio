@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { apiFetch, type Character } from '@/lib/api'
+import { useWorkspace } from '@/lib/workspace-context'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
@@ -18,9 +19,9 @@ const tierColors: Record<string, string> = {
 }
 
 export function CharacterPanel() {
+  const { projectId, refreshKey } = useWorkspace()
   const [characters, setCharacters] = useState<Character[]>([])
   const [loading, setLoading] = useState(true)
-  const [projectId, setProjectId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
@@ -28,22 +29,20 @@ export function CharacterPanel() {
   const loadCharacters = (pid: string) => {
     apiFetch<Character[]>(`/api/projects/${pid}/characters`)
       .then(setCharacters)
-      .catch(() => {})
+      .catch(() => setCharacters([]))
   }
 
   useEffect(() => {
-    apiFetch<Array<{ id: string }>>('/api/projects')
-      .then((projects) => {
-        if (projects.length === 0) return
-        setProjectId(projects[0].id)
-        return apiFetch<Character[]>(`/api/projects/${projects[0].id}/characters`)
-      })
-      .then((chars) => {
-        if (chars) setCharacters(chars)
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
-  }, [])
+    if (!projectId) {
+      setCharacters([])
+      setLoading(false)
+      return
+    }
+    setLoading(true)
+    setEditingId(null)
+    loadCharacters(projectId)
+    setLoading(false)
+  }, [projectId, refreshKey])
 
   const startEdit = (char: Character) => {
     const dims = char.dimensionsJson as Record<string, unknown> | null

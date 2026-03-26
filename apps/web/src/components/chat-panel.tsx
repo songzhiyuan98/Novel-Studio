@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { apiFetch } from '@/lib/api'
+import { useWorkspace } from '@/lib/workspace-context'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
@@ -34,18 +34,19 @@ export function ChatPanel() {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [streamingText, setStreamingText] = useState('')
-  const [projectId, setProjectId] = useState<string | null>(null)
+  const { projectId } = useWorkspace()
   const [flowContext, setFlowContext] = useState<any>({ step: 'idle' })
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // Get first project ID on mount
+  // Reset chat when project changes
   useEffect(() => {
-    apiFetch<Array<{ id: string }>>('/api/projects')
-      .then((projects) => {
-        if (projects.length > 0) setProjectId(projects[0].id)
-      })
-      .catch(() => {})
-  }, [])
+    setMessages([{
+      id: '1',
+      role: 'assistant',
+      content: '欢迎来到 Novel Studio！我是你的创作助手。\n\n你可以试试：\n- "帮我想几个角色名字"\n- "开始写下一章"\n- "修改林凡的境界"\n\n有什么想法？',
+    }])
+    setFlowContext({ step: 'idle' })
+  }, [projectId])
 
   // Auto-scroll to bottom
   useEffect(() => {
