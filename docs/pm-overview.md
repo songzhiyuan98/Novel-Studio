@@ -1,10 +1,12 @@
 # PM Overview
 
-> See also: `docs/superpowers/specs/2026-03-24-core-architecture-design.md` for full design spec.
+> See also: `docs/superpowers/specs/2026-03-24-core-architecture-design.md` for full v2 design spec.
 
 ## Product Goal
 
-Build an interactive multi-agent writing room for ultra-long serialized web novels (Fanqie/番茄-level, hundreds to thousands of chapters) where the user acts as creative director, not full-time author. The system must help the user create, revise, and serialize story artifacts while preserving canon and avoiding context drift.
+Build an **AI-powered serial fiction workbench** for ultra-long serialized web novels (Fanqie/番茄-level, hundreds to thousands of chapters) where the user acts as creative director, not full-time author. The system must help the user create, revise, and serialize story artifacts while preserving canon and avoiding context drift.
+
+The system is **genre-agnostic** — a dynamic ProjectTemplate drives all genre-specific schemas, format parameters, and character archetypes. No format values (chapter length, volume size, etc.) are hardcoded; everything is configurable per project.
 
 ## Core Problem
 
@@ -30,6 +32,8 @@ Novel Studio solves this by combining:
 - task-specific context isolation (compiled packets, not chat history)
 - multi-step generation with QA gates
 - deterministic orchestration (code, not LLM) for reliability
+- dynamic ProjectTemplate for genre-agnostic schema generation
+- blueprint confirmation before prose generation
 
 ## Product Principles
 
@@ -60,6 +64,12 @@ Novel Studio solves this by combining:
 8. **User Controls Everything**
    The user interacts via natural language + buttons. All major decisions (confirm, reject, revise) require explicit user action. The system never autonomously admits content into canon.
 
+9. **Dynamic Schemas**
+   The system is genre-agnostic. A ProjectTemplate defines genre-specific field schemas, character archetypes, format parameters, and structural conventions. No genre logic is hardcoded — templates drive everything.
+
+10. **Blueprint Before Prose**
+    The user must review and confirm a detailed blueprint before any prose generation begins. Blueprints replace simple scene cards and include per-scene goals, beats, emotional arcs, and continuity anchors. The Writer executes strictly from confirmed blueprints.
+
 ## Target Users
 
 ### Primary
@@ -77,11 +87,15 @@ Novel Studio solves this by combining:
 
 A single user can:
 
-- create a project with style profile and API key configuration
-- generate/edit story bible, character cards, outline, scene cards
-- generate a 2000-3000 character chapter draft
+- create a project from a ProjectTemplate with configurable format parameters
+- configure API key and choose models for each worker
+- generate/edit story bible, character cards (with tiers), outline, blueprints
+- review and confirm detailed blueprints before chapter generation
+- generate a chapter draft from confirmed blueprints (with streaming output)
+- rewrite individual scenes without regenerating the full chapter
 - receive QA feedback with evidence references
 - confirm approved material into canon
+- view impact analysis when reversing earlier canon decisions
 - continue this loop for 5+ chapters with stable continuity
 - observe the full agent collaboration process via Orchestration Trace
 

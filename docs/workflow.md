@@ -1,6 +1,7 @@
 # Workflow Phases
 
 > See also: `docs/superpowers/specs/2026-03-24-core-architecture-design.md` for full design spec.
+> See also: v2 design spec for blueprint-driven workflow, impact analysis, and ProjectTemplate configuration.
 
 ## Phase 0 — Project Bootstrap
 
@@ -16,11 +17,13 @@ Input:
 Processing:
 - Chat Agent acknowledges user input
 - Orchestrator creates project record and initial brief
+- Orchestrator initializes ProjectTemplate with format parameters (chapter length, volume size, style base, etc.)
 - Orchestrator creates initial open issues list
 
 Output:
 - project record
 - initial project brief
+- ProjectTemplate (all format parameters configurable)
 - initial open issues list
 
 ## Phase 1 — Story Foundation (runs once per project)
@@ -45,7 +48,7 @@ Artifacts:
 
 Orchestrator dispatches Planner to create foundational artifacts:
 - world rules draft
-- character cards
+- character cards (with tier assignment: core / important / episodic)
 - relationship map
 - high-level outline
 - development chains
@@ -60,30 +63,40 @@ Orchestrator processes confirmations → canon projection.
 
 ## Phase 2-N — Chapter Loop (repeats for each chapter)
 
-### Step 1: Chapter Planning
+### Step 1: Blueprint Planning
 
 **Trigger:** User requests next chapter (via Chat Agent → Orchestrator).
 
-Orchestrator dispatches Planner with relevant canon packet.
+Orchestrator dispatches Planner with relevant canon packet. Planner operates in one of two modes:
 
-Planner produces:
+**Mode A — Expand User Outline:** When the user provides an outline or direction, Planner expands it into a full blueprint with scene-level detail.
+
+**Mode B — Brainstorm Directions:** When the user has no specific direction, Planner generates multiple candidate directions (A/B/C) grounded in canon, unresolved threads, and development chains. User selects a direction, then Planner expands it into a blueprint.
+
+Planner produces a **blueprint** (replaces simple scene cards):
 - chapter objective
 - required callbacks / dependencies
-- scene cards
+- per-scene breakdown including:
+  - scene objective and emotional beat
+  - combat choreography details (if applicable)
+  - key dialogue beats and reversals
+  - character entrance/exit and state changes
 - emotional and pacing targets
 
-Chat Agent presents scene plan to user. User can edit and confirm.
+Chat Agent presents the blueprint to user. User can edit and confirm. **Blueprint confirmation is required before writing proceeds.**
 
 ### Step 2: Chapter Drafting
 
-**Trigger:** User confirms scene plan.
+**Trigger:** User confirms blueprint.
 
 Orchestrator compiles context packet (via L0 structured recall with token budget) and dispatches Writer.
 
-Writer generates chapter draft (2000-3000 Chinese characters) from:
-- confirmed scene cards
+Writer generates chapter draft (length per ProjectTemplate configuration) from:
+- confirmed blueprint (treated as binding contract)
 - canon packet (character states, world rules, recent summaries)
-- style packet
+- style packet (base + custom from ProjectTemplate)
+
+Writer strictly executes the blueprint — no independent content decisions. Output is streamed to the client.
 
 Orchestrator saves chapter draft artifact.
 
@@ -97,12 +110,38 @@ QA validates:
 - tone alignment
 - motivation consistency
 - unresolved logic gaps
+- **blueprint coverage** — every scene objective, dialogue beat, and reversal in the blueprint must be addressed
+- **character card compliance** — character behavior must match their card traits, tier expectations, and current state
 
 Outcomes:
 - **Pass** → proceed to Step 4
 - **Pass with notes** → proceed to Step 4 (notes attached)
-- **Revision required** → Chat Agent presents QA issues to user. User decides whether to revise (new user action → back to Step 2) or accept as-is
+- **Revision required** → Chat Agent presents QA issues to user. User decides whether to revise at **per-scene granularity** (new user action → back to Step 2 for affected scenes only) or accept as-is
 - **Blocked** → Chat Agent presents blocking issues to user. Requires explicit user decision before proceeding
+
+### Step 3b: Per-Scene Rewriting (Revision Loop)
+
+When QA flags issues at the scene level, the user can request rewriting of individual scenes rather than the entire chapter:
+
+1. Chat Agent presents flagged scenes with QA notes
+2. User selects which scenes to revise and optionally provides guidance
+3. Orchestrator dispatches Writer with the specific scene blueprint + revision notes
+4. Writer rewrites only the targeted scenes (streamed output)
+5. Orchestrator merges revised scenes into the chapter draft
+6. Return to Step 3 (QA re-evaluates the updated draft)
+
+### Step 3c: Impact Analysis (Mid-Chapter Setting Changes)
+
+When the user requests a change to canon elements (character traits, world rules, relationships) during an active chapter cycle:
+
+1. Orchestrator runs impact analysis against current canon and in-progress content
+2. Impact is classified by risk level:
+   - **Green** — localized change, no downstream effects
+   - **Yellow** — affects related artifacts; Orchestrator lists affected items for user review
+   - **Red** — cascading impact across multiple chapters/threads; requires explicit user confirmation with full scope visibility
+3. Chat Agent presents the impact report with risk level
+4. User confirms or cancels the change
+5. If confirmed, Orchestrator applies the change and flags any in-progress drafts that need revision
 
 ### Step 4: Canonization
 
@@ -118,8 +157,9 @@ Orchestrator executes canon projection pipeline:
    - TimelineEvent (insert new)
    - UnresolvedThread (status change)
    - DevelopmentChain (advance)
-4. Check volume boundary (~100 chapters) → trigger volume summary if needed
-5. Write audit log
+4. Check volume boundary (per ProjectTemplate volume size setting) → trigger volume summary if needed
+5. Update character lifecycle (tier transitions, episodic character cleanup)
+6. Write audit log
 
 ### Step 5: Loop
 
@@ -152,3 +192,5 @@ A typical chapter cycle (Plan + Write + QA) = 3 tasks. If QA returns `revise`, t
 1. No worker should ever read the full raw conversation history. All work must be packet-based.
 2. Workers cannot dispatch other workers. Call chain is always: User → Chat Agent → Orchestrator → Worker → return.
 3. Only user confirmation can admit content into canon.
+4. Blueprint confirmation is required before Writer is dispatched.
+5. All format parameters (chapter length, volume size, style base) are defined in ProjectTemplate — no hardcoded defaults in workflow logic.

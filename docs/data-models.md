@@ -1,20 +1,33 @@
 # Data Models
 
-> See also: `docs/superpowers/specs/2026-03-24-core-architecture-design.md` for full design spec.
+> See also: `docs/superpowers/specs/2026-03-25-design-v2.md` for the v2 design spec.
+> See also: `docs/superpowers/specs/2026-03-24-core-architecture-design.md` for the original design spec.
 
 ## Core Entities
+
+## ProjectTemplate
+- id
+- project_id
+- genre_json (primary, tags)
+- format_json (chapter_length: { min, max, unit }, volume_size, language)
+- character_dimensions_json (array of { key, label, type })
+- relationship_dimensions_json (array of { key, label, type })
+- style_profile_json (base: { pov, tense, prose_density }, custom: array of { key, value })
+- writing_rules_json (array of rule strings)
+- qa_custom_dimensions_json (array of dimension strings)
+- created_at
+- updated_at
 
 ## Project
 - id
 - title
 - description
-- genre
-- tone
-- target_length
-- style_profile_json (pov, tense, prose_density, dialogue_ratio, emotional_intensity, humor_level, darkness_level, romance_emphasis, action_frequency)
+- template_id (references ProjectTemplate)
 - status (active, archived)
 - created_at
 - updated_at
+
+Note: Genre, tone, style profile, chapter length, and volume size are all derived from the associated ProjectTemplate. No genre-specific fields are hardcoded on Project.
 
 ## ModelConfig
 - id
@@ -45,6 +58,7 @@
 - parent_artifact_id
 - source_task_id
 - content_json
+- scene_segments_json (array of { scene_index, scene_key, text } — used for per-scene rewriting; only populated for chapter_draft artifacts)
 - summary_text
 - confirmed_at
 - archived_at
@@ -58,7 +72,7 @@
 - character_card
 - relationship_map
 - outline
-- scene_card
+- scene_card (detailed blueprint with combat/dialogue/reversal specifics)
 - chapter_draft
 - qa_report
 - style_guide
@@ -73,6 +87,7 @@ Note: `development_chain` and `issue` are separate canon/tracking entities, not 
 - title
 - status
 - latest_artifact_id
+- scene_segments_json (array of { scene_index, scene_key, status } — tracks per-scene state for rewriting)
 - canonized_at
 - published_at
 - created_at
@@ -100,7 +115,7 @@ Note: `development_chain` and `issue` are separate canon/tracking entities, not 
 - volume_number
 - chapter_range_start
 - chapter_range_end
-- summary_text (1000-2000 chars compressed summary)
+- summary_text (compressed summary; length configurable via ProjectTemplate)
 - main_plot_progression_json
 - character_arc_turning_points_json
 - world_changes_json
@@ -125,15 +140,20 @@ Note: `development_chain` and `issue` are separate canon/tracking entities, not 
 - id
 - project_id
 - character_key
-- immutable_traits_json
-- evolving_traits_json
-- secrets_json
-- public_persona_json
-- emotional_state_json
-- objective_json
+- name
+- tier (core, important, episodic)
+- basic_json (age, appearance, etc. — universal fields)
+- personality_json (core_traits, speech_style, speech_examples, taboos — universal fields)
+- dimensions_json (dynamic per genre, schema defined by ProjectTemplate.character_dimensions)
+- current_status_json (location, physical, emotional, objective — universal fields)
+- hooks_json (array of { hook, planted_chapter, status })
+- change_history_json (array of { chapter, delta })
 - last_updated_from_chapter
 - source_artifact_id
+- archived_at
 - updated_at
+
+Note: `dimensions_json` stores genre-specific fields (e.g., realm/techniques for cultivation, net_worth/companies for billionaire). The schema is defined by `ProjectTemplate.character_dimensions` and varies per project.
 
 ## RelationshipState
 - id
@@ -141,12 +161,13 @@ Note: `development_chain` and `issue` are separate canon/tracking entities, not 
 - character_a
 - character_b
 - relationship_type
-- trust_score
-- tension_score
-- intimacy_score
+- base_scores_json (universal scores always present: { trust, tension })
+- custom_scores_json (dynamic per genre, schema defined by ProjectTemplate.relationship_dimensions; e.g., { intimacy, rivalry, debt })
 - status_notes_json
 - last_updated_from_chapter
 - source_artifact_id
+
+Note: `base_scores_json` contains universal relationship metrics. `custom_scores_json` contains genre-specific metrics defined by `ProjectTemplate.relationship_dimensions`.
 
 ## TimelineEvent
 - id
@@ -188,7 +209,7 @@ Note: `development_chain` and `issue` are separate canon/tracking entities, not 
 ## Task
 - id
 - project_id
-- task_type (plan, write, qa, summarize, evaluate)
+- task_type (plan, write, qa, summarize, evaluate, rewrite_scene, impact_analysis)
 - requested_by (user_action_id or system)
 - assigned_worker (chat_agent, planner, writer, qa, summarizer)
 - input_packet_json
@@ -209,7 +230,7 @@ Note: `development_chain` and `issue` are separate canon/tracking entities, not 
 - id
 - project_id
 - severity (low, medium, high)
-- issue_type (continuity, style, motivation, pacing, world_logic)
+- issue_type (open string; common defaults: continuity, style, motivation, pacing, world_logic, power_scaling, plus any custom types from ProjectTemplate.qa_custom_dimensions)
 - description
 - evidence_refs_json (array of { artifact_id, version, quote })
 - suggested_fix
@@ -218,6 +239,8 @@ Note: `development_chain` and `issue` are separate canon/tracking entities, not 
 - source_task_id
 - created_at
 - resolved_at
+
+Note: `issue_type` is an open string, not a closed enum. Projects may define additional issue types via `ProjectTemplate.qa_custom_dimensions`.
 
 ## ConversationMessage
 - id
@@ -232,7 +255,7 @@ Note: `development_chain` and `issue` are separate canon/tracking entities, not 
 ## AuditLog
 - id
 - project_id
-- event_type (task_created, task_completed, task_failed, packet_compiled, artifact_created, artifact_edited, artifact_confirmed, artifact_rejected, qa_passed, qa_blocked, chapter_canonized, canon_projected, projection_failed, summary_generated, volume_summary_generated)
+- event_type (task_created, task_completed, task_failed, packet_compiled, artifact_created, artifact_edited, artifact_confirmed, artifact_rejected, qa_passed, qa_blocked, chapter_canonized, canon_projected, projection_failed, summary_generated, volume_summary_generated, impact_analysis_completed, scene_rewritten)
 - actor (chat_agent, orchestrator, planner, writer, qa, summarizer, user)
 - target_type (task, artifact, chapter, canon_entry)
 - target_id
@@ -244,16 +267,16 @@ Note: `development_chain` and `issue` are separate canon/tracking entities, not 
 ## State Machines
 
 ### Artifact Status
-- draft → reviewed → confirmed → locked
-- draft → rejected → archived
-- confirmed → archived
-- Any non-locked status → archived
+- draft -> reviewed -> confirmed -> locked
+- draft -> rejected -> archived
+- confirmed -> archived
+- Any non-locked status -> archived
 
 ### Chapter Status
-- planned → drafted → reviewed → user_approved → canonized → published
-- reviewed (QA revise) → drafted (revision loop, new user action)
-- reviewed (QA block) → requires user decision
-- Any status → archived
+- planned -> drafted -> reviewed -> user_approved -> canonized -> published
+- reviewed (QA revise) -> drafted (revision loop, new user action)
+- reviewed (QA block) -> requires user decision
+- Any status -> archived
 
 ### Issue Status
 - open

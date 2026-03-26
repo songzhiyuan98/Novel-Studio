@@ -1,17 +1,18 @@
 # Agent Design and Responsibilities
 
 > See also: `docs/superpowers/specs/2026-03-24-core-architecture-design.md` for full design spec.
+> See also: v2 design spec for blueprint-driven agents, character tiers, impact analysis, and ProjectTemplate configuration.
 
 ## Guiding Rule
 
-Agent count is not the product advantage. Controlled role boundaries are. For MVP, a small number of well-scoped workers is preferable to a large theatrical agent roster.
+Agent count is not the product advantage. Controlled role boundaries are. For MVP, a small number of well-scoped workers is preferable to a large theatrical agent roster. Novel Studio is an **AI serial fiction workbench**, not a generator — the user drives creative decisions while agents execute within strict boundaries.
 
 ## Architecture Decision: Producer Split
 
 The original "Producer" concept is split into two components:
 
 - **Chat Agent (LLM)** — the only user-facing component. Handles dialogue, intent classification, and lightweight creative tasks.
-- **Orchestrator (deterministic code)** — workflow state machine, packet compilation, task dispatch, canon gate. NOT an LLM.
+- **Orchestrator (deterministic code)** — workflow state machine, packet compilation, task dispatch, canon gate, impact analysis. NOT an LLM.
 
 This separation ensures orchestration logic is testable, deterministic, and immune to LLM hallucination.
 
@@ -28,6 +29,7 @@ This separation ensures orchestration logic is testable, deterministic, and immu
 - handle lightweight creative requests directly (e.g., brainstorm names, quick suggestions)
 - generate user-facing responses with option buttons
 - route pipeline tasks to Orchestrator
+- present impact analysis results (green/yellow/red risk levels) for user decision
 
 **Cannot**
 - directly mutate canon (routes to Orchestrator)
@@ -52,7 +54,7 @@ This separation ensures orchestration logic is testable, deterministic, and immu
 - Execute workflow logic, compile packets, dispatch tasks, enforce safety.
 
 **Responsibilities**
-- workflow state machine (plan → write → qa → canonize)
+- workflow state machine (plan → blueprint confirm → write → qa → canonize)
 - compile context packets with token budget
 - dispatch tasks to LLM workers
 - manage artifact statuses and transitions
@@ -60,6 +62,9 @@ This separation ensures orchestration logic is testable, deterministic, and immu
 - trigger Summarizer on canonize
 - enforce safety limits (max tasks, max tokens)
 - write audit logs with token tracking
+- **run impact analysis** for mid-workflow canon changes (green/yellow/red risk classification)
+- **manage character tier lifecycle** (core/important/episodic transitions, episodic cleanup on canonize)
+- **enforce blueprint confirmation** before Writer dispatch
 
 **Cannot**
 - directly mutate canon without explicit user confirmation
@@ -76,16 +81,32 @@ This separation ensures orchestration logic is testable, deterministic, and immu
 ### 3. Planner (LLM — high-tier model)
 
 **Mission**
-- Convert vague user goals into structured narrative assets.
+- Convert vague user goals into structured narrative blueprints. Operates in two modes depending on user input.
+
+**Mode A — Expand User Outline**
+- User provides an outline or direction
+- Planner expands it into a detailed blueprint with per-scene granularity
+- Canon-aware: suggestions respect confirmed world rules, character states, and active threads
+
+**Mode B — Brainstorm Directions**
+- User has no specific direction
+- Planner generates multiple candidate directions (A/B/C) grounded in canon, unresolved threads, and development chains
+- After user selects a direction, Planner expands it into a full blueprint
 
 **Responsibilities**
 - evaluate material sufficiency
 - produce minimal question set when missing info blocks progress
-- generate structure options A/B/C when needed
+- generate structure options A/B/C when needed (Mode B)
 - define world-rule drafts
 - create outline beats
-- create scene cards
+- **generate blueprints** (replace simple scene cards) including:
+  - scene objectives and emotional beats
+  - combat choreography details
+  - key dialogue beats and reversals
+  - character entrance/exit and state changes
 - maintain development logic chains
+- **canon-aware suggestions**: all output respects confirmed canon and flags potential conflicts
+- **character tier awareness**: plan appropriate page time and development depth per character tier (core/important/episodic)
 
 **Cannot**
 - finalize canon
@@ -98,10 +119,10 @@ This separation ensures orchestration logic is testable, deterministic, and immu
 
 **Outputs**
 - evaluation report
-- option cards
+- option cards (Mode B brainstorm directions)
 - world drafts
 - outline drafts
-- scene cards
+- **blueprints** (per-scene detail including combat, dialogue, reversals)
 - dependency chain notes
 
 ---
@@ -109,26 +130,29 @@ This separation ensures orchestration logic is testable, deterministic, and immu
 ### 4. Writer (LLM — high-tier model)
 
 **Mission**
-- Generate chapter prose (2000-3000 Chinese characters) strictly from approved planning artifacts.
+- Generate chapter prose strictly from confirmed blueprints. The Writer **executes** blueprints — it makes no independent content decisions. Chapter length is determined by ProjectTemplate configuration.
 
 **Responsibilities**
-- draft chapter prose from scene cards
-- preserve tone, POV, and style constraints
+- draft chapter prose from blueprints at **per-scene granularity**
+- preserve tone, POV, and style constraints (from ProjectTemplate style profile)
 - obey canon and current-state packets
-- produce rewrite variants when requested
+- produce rewrite variants for individual scenes when requested (per-scene rewriting)
+- **stream output** to the client during generation
+- treat the blueprint as a binding contract — every scene objective, dialogue beat, and reversal must be addressed
 
 **Cannot**
 - invent new world rules without marking them as unresolved/provisional
 - rewrite confirmed canon implicitly
 - skip required scenes unless instructed
+- make content decisions not specified in the blueprint
 - dispatch other workers
 
 **Inputs**
-- compiled packet from Orchestrator (scene cards, canon, character states, style rules)
+- compiled packet from Orchestrator (blueprint as contract, canon, character states, style rules)
 
 **Outputs**
-- chapter draft
-- rewrite version
+- chapter draft (streamed)
+- rewrite version (per-scene)
 - scene-level prose blocks
 
 ---
@@ -143,8 +167,11 @@ This separation ensures orchestration logic is testable, deterministic, and immu
 - continuity validation
 - detect canon conflicts
 - detect relationship / motivation drift
+- **blueprint coverage check** — verify every scene objective, dialogue beat, combat detail, and reversal from the blueprint is addressed in the draft
+- **character card compliance** — verify character behavior matches their card traits, tier expectations, and current state
 - generate evidence-based issue reports
 - recommend pass, revise, or block
+- flag issues at per-scene granularity to enable targeted rewriting
 
 **Cannot**
 - silently modify canon
@@ -152,14 +179,16 @@ This separation ensures orchestration logic is testable, deterministic, and immu
 - dispatch other workers
 
 **Inputs**
-- compiled packet from Orchestrator (chapter draft, relevant canon, character states)
+- compiled packet from Orchestrator (chapter draft, relevant canon, character states, **blueprint for coverage check**)
 
 **Outputs**
 - QA report
-- issue list with severity
+- issue list with severity (flagged per scene)
 - evidence references
 - suggested patch notes
 - gate decision
+- **blueprint coverage report** (which blueprint items are fulfilled/missing)
+- **character compliance report** (which character behaviors match/deviate from cards)
 
 ---
 
@@ -169,11 +198,11 @@ This separation ensures orchestration logic is testable, deterministic, and immu
 - Compress chapter content into structured summaries on canonize.
 
 **Responsibilities**
-- generate chapter-level summaries (300-500 chars)
+- generate chapter-level summaries (length per ProjectTemplate configuration)
 - extract character state deltas
 - identify new/resolved/advanced threads
 - extract timeline events
-- trigger volume-level summary generation at volume boundaries (~100 chapters)
+- trigger volume-level summary generation at volume boundaries (per ProjectTemplate volume size setting)
 
 **Cannot**
 - modify canon directly (output is processed by Orchestrator)
@@ -186,6 +215,20 @@ This separation ensures orchestration logic is testable, deterministic, and immu
 
 **Outputs**
 - structured summary with: summary text, key events, character deltas, thread changes, timeline events
+
+---
+
+## Character Tier Management
+
+Characters are classified into three tiers with different lifecycle management:
+
+| Tier | Description | Lifecycle |
+|---|---|---|
+| **Core** | Protagonists and central antagonists | Persistent across all volumes; full state tracking |
+| **Important** | Recurring secondary characters | Persistent within active arcs; state tracked while relevant |
+| **Episodic** | One-off or short-arc characters | Active during their scenes; cleaned up on canonize when arc concludes |
+
+Tier assignment happens during foundation (Step 1.2) and can be adjusted by the user at any time. The Orchestrator manages tier transitions and ensures Planner allocates appropriate development depth per tier. On canonize, the Orchestrator runs episodic character cleanup to archive characters whose arcs have concluded.
 
 ---
 
