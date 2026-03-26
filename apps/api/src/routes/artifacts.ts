@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { eq } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import type { Database } from '../db/index.js'
 import { artifacts } from '../db/schema/index.js'
 
@@ -7,7 +7,13 @@ export function artifactRoutes(db: Database) {
   const app = new Hono()
 
   app.get('/:projectId/artifacts', async (c) => {
-    const results = await db.select().from(artifacts).where(eq(artifacts.projectId, c.req.param('projectId')))
+    const projectId = c.req.param('projectId')
+    const type = c.req.query('type')
+    const conditions = [eq(artifacts.projectId, projectId)]
+    if (type) {
+      conditions.push(eq(artifacts.type, type as any))
+    }
+    const results = await db.select().from(artifacts).where(and(...conditions))
     return c.json(results)
   })
 

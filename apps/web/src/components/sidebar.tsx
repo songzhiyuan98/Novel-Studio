@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { apiFetch, type Project, type Chapter } from '@/lib/api'
+import { useWorkspace } from '@/lib/workspace-context'
 
 const statusColors: Record<string, string> = {
   planned: 'bg-zinc-300',
@@ -22,10 +23,10 @@ const statusLabels: Record<string, string> = {
 }
 
 export function Sidebar() {
+  const { selectChapter, goToChat, selectedChapterNumber, view, setProjectId } = useWorkspace()
   const [projects, setProjects] = useState<Project[]>([])
   const [chapters, setChapters] = useState<Chapter[]>([])
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
-  const [selectedChapter, setSelectedChapter] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -34,7 +35,10 @@ export function Sidebar() {
     apiFetch<Project[]>('/api/projects')
       .then((data) => {
         setProjects(data)
-        if (data.length > 0) setSelectedProject(data[0])
+        if (data.length > 0) {
+          setSelectedProject(data[0])
+          setProjectId(data[0].id)
+        }
         setLoading(false)
       })
       .catch((e) => {
@@ -46,6 +50,7 @@ export function Sidebar() {
   // Load chapters when project changes
   useEffect(() => {
     if (!selectedProject) return
+    setProjectId(selectedProject.id)
     apiFetch<Chapter[]>(`/api/projects/${selectedProject.id}/chapters`)
       .then(setChapters)
       .catch(() => setChapters([]))
@@ -70,14 +75,17 @@ export function Sidebar() {
         {/* Quick Access */}
         <div className="mb-4">
           <p className="px-2 py-1 text-xs font-semibold uppercase text-zinc-400">快速访问</p>
+          <button
+            onClick={goToChat}
+            className={`w-full rounded-md px-3 py-2 text-left text-sm ${view === 'chat' ? 'bg-zinc-100 font-medium' : 'hover:bg-zinc-100'}`}
+          >
+            💬 创作对话
+          </button>
           <button className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-zinc-100">
             👤 角色面板
           </button>
           <button className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-zinc-100">
             🌍 世界设定
-          </button>
-          <button className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-zinc-100">
-            ⚙️ 项目设置
           </button>
         </div>
 
@@ -94,9 +102,9 @@ export function Sidebar() {
             .map((ch) => (
               <button
                 key={ch.id}
-                onClick={() => setSelectedChapter(ch.chapterNumber)}
+                onClick={() => selectChapter(ch.id, ch.chapterNumber)}
                 className={`w-full rounded-md px-3 py-2 text-left text-sm ${
-                  selectedChapter === ch.chapterNumber
+                  selectedChapterNumber === ch.chapterNumber && view === 'chapter'
                     ? 'bg-zinc-100 font-medium'
                     : 'hover:bg-zinc-50'
                 }`}
