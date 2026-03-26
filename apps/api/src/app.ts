@@ -7,6 +7,7 @@ import { artifactRoutes } from './routes/artifacts.js'
 import { chapterRoutes } from './routes/chapters.js'
 import { canonRoutes } from './routes/canon.js'
 import { modelConfigRoutes } from './routes/model-config.js'
+import { chatRoutes } from './routes/chat.js'
 
 const app = new Hono()
 
@@ -20,5 +21,6 @@ app.route('/api/projects', artifactRoutes(db))
 app.route('/api/projects', chapterRoutes(db))
 app.route('/api/projects', canonRoutes(db))
 app.route('/api/projects', modelConfigRoutes(db))
+app.route('/api/projects', chatRoutes(db))
 
 export { app }
