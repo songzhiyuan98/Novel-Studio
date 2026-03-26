@@ -7,6 +7,9 @@ const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   'claude-sonnet-4-6': { input: 3, output: 15 },
   'claude-opus-4-6': { input: 15, output: 75 },
   'claude-haiku-4-5': { input: 0.8, output: 4 },
+  // DeepSeek — extremely cheap
+  'deepseek-chat': { input: 0.27, output: 1.1 },
+  'deepseek-reasoner': { input: 0.55, output: 2.19 },
 }
 
 const DEFAULT_PRICING = { input: 5, output: 15 }

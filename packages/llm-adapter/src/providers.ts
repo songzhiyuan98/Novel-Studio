@@ -3,6 +3,7 @@ import type { LanguageModelV1 } from 'ai'
 
 const PROVIDER_DEFAULTS: Record<string, { chat: string; strong: string; fast: string }> = {
   openai: { chat: 'gpt-4o-mini', strong: 'gpt-4o', fast: 'gpt-4o-mini' },
+  deepseek: { chat: 'deepseek-chat', strong: 'deepseek-chat', fast: 'deepseek-chat' },
 }
 
 const WORKER_MODEL_TIER: Record<string, 'chat' | 'strong' | 'fast'> = {
@@ -26,7 +27,15 @@ export function createLanguageModel(provider: string, model: string, apiKey: str
       const openai = createOpenAI({ apiKey })
       return openai(model)
     }
+    case 'deepseek': {
+      const deepseek = createOpenAI({
+        apiKey,
+        baseURL: 'https://api.deepseek.com/v1',
+      })
+      // DeepSeek doesn't support OpenAI Responses API, use .chat() for /chat/completions
+      return deepseek.chat(model)
+    }
     default:
-      throw new Error(`Unsupported provider: ${provider}. Supported: openai`)
+      throw new Error(`Unsupported provider: ${provider}. Supported: openai, deepseek`)
   }
 }
