@@ -1,10 +1,5 @@
+import { redirect } from 'next/navigation'
+
 export default function Home() {
-  return (
-    <main className="flex min-h-screen items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900">Novel Studio</h1>
-        <p className="mt-2 text-lg text-gray-600">AI-powered serial fiction workbench</p>
-      </div>
-    </main>
-  )
+  redirect('/workspace')
 }
