@@ -1,1 +1,8 @@
-// Schema exports will be added as tables are defined
+export * from './project.js'
+export * from './model-config.js'
+export * from './artifact.js'
+export * from './chapter.js'
+export * from './character.js'
+export * from './story.js'
+export * from './task.js'
+export * from './audit.js'
